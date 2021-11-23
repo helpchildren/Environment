@@ -261,22 +261,9 @@ public class MainActivity extends BaseActivity {
     private void initPermission() {
         RxPermissions rxPermissions = new RxPermissions(this);
         rxPermissions.request(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.READ_PHONE_STATE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE).subscribe(new Consumer<Boolean>() {
-            @Override
-            public void accept(Boolean aBoolean) throws Exception {
-                if (aBoolean) {
-                    //表示用户同意权限
-                    Toast.makeText(MainActivity.this, "用户同意使用权限", Toast.LENGTH_SHORT).show();
-                } else {
-                    //表示用户不同意权限
-                    Toast.makeText(MainActivity.this, "用户拒绝使用权限", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+                Manifest.permission.WRITE_EXTERNAL_STORAGE).subscribe();
     }
 
 }

@@ -46,6 +46,10 @@ public class SettingDialog extends BaseDialog {
         eDeviceserialPort = (EditText) findViewById(R.id.e_deviceserialPort);
         eWsurl  = (EditText) findViewById(R.id.e_wsurl);
         eOutlen  = (EditText) findViewById(R.id.e_outlen);
+        radgroup  = (RadioGroup) findViewById(R.id.radioGroup);
+        btnYN  = (RadioButton) findViewById(R.id.btnYN);
+        btnDQ  = (RadioButton) findViewById(R.id.btnDQ);
+
 
         eWsurl.setText(GlobalSetting.wsurl);
         eDeviceserialPort.setText(GlobalSetting.serialPort);
