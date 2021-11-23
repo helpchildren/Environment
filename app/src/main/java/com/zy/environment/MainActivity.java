@@ -16,6 +16,7 @@ import com.sesxh.okwebsocket.OkWebSocket;
 import com.sesxh.okwebsocket.WebSocketInfo;
 import com.sesxh.okwebsocket.annotation.WebSocketStatus;
 import com.sesxh.rxpermissions.RxPermissions;
+import com.sesxh.yzsspeech.YSpeech;
 import com.zy.environment.base.BaseActivity;
 import com.zy.environment.bean.MsgBean;
 import com.zy.environment.bean.MsgType;
@@ -24,6 +25,9 @@ import com.zy.environment.utils.log.Logger;
 import com.zy.environment.utils.FylToast;
 import com.zy.environment.utils.ToolsUtils;
 import com.zy.environment.widget.DialogUtils;
+
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
@@ -50,6 +54,14 @@ public class MainActivity extends BaseActivity {
         initData();
 
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void handlerEvent(String event) {
+        Log.e("MainActivity", "handlerEvent---event:"+event);
+        OkWebSocket.closeAllNow();
+        initData();//刷新连接
+    }
+
 
     private void initView() {
         GlobalSetting.deviceid = ToolsUtils.getDeviceId(this);
@@ -101,7 +113,6 @@ public class MainActivity extends BaseActivity {
                         break;
                      case WebSocketStatus.STATUS_ON_CLOSED://断开连接
                         DialogUtils.getInstance().closeDialog();
-                        FylToast.makeText(activity, "服务器断开连接", Toast.LENGTH_SHORT).show();
                         break;
                     case WebSocketStatus.STATUS_ON_FAILURE://连接异常
                         DialogUtils.getInstance().closeDialog();
@@ -128,6 +139,8 @@ public class MainActivity extends BaseActivity {
     private void cmdHandle(MsgBean msgBean){
         switch(msgBean.getType()){
             case MsgType.TYPE_OUT://出货
+                YSpeech.getInstance().toSpeech("正在出货，请稍后");
+                //调用硬件部分
 
                 break;
             case MsgType.TYPE_HEART://心跳

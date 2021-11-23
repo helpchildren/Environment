@@ -76,6 +76,7 @@ public class ToolsUtils {
                     //保存
                     GlobalSetting.putSetting(activity);
                     FylToast.makeText(activity, "设置成功", Toast.LENGTH_SHORT).show();
+                    EventBusUtils.post("Refresh Main");
                     baseDialog.dismiss();
                 }else {
                     String password = ed_input.getText().toString();

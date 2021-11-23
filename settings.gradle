@@ -1,3 +1,4 @@
+include ':serialport'
 include ':okwebsocket'
 include ':app'
 rootProject.name = "Environment"

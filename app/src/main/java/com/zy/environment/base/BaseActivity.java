@@ -2,9 +2,12 @@ package com.zy.environment.base;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+
+import com.zy.environment.utils.EventBusUtils;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +30,10 @@ public class BaseActivity extends AppCompatActivity {
         fullScreenAndLight();//全屏常量
         hideBottomUIMenu();//隐藏按键
         steepStatusBar();//隐藏状态栏
+        EventBusUtils.register(this);
     }
+
+
 
     //销毁当个Activity方法
     public void removeActivity() {
@@ -76,6 +82,7 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        EventBusUtils.unregister(this);
     }
 
 }
