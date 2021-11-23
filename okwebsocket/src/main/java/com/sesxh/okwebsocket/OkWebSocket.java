@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import okio.ByteString;
+//import okio.ByteString;
 
 /**
  * @author LYH
@@ -55,9 +55,9 @@ public class OkWebSocket {
      *
      * @param byteString 信息类型为ByteString
      */
-    public static Observable<Boolean> send(String url, ByteString byteString){
-        return sOkWebSocket.send(url, byteString);
-    }
+//    public static Observable<Boolean> send(String url, ByteString byteString){
+//        return sOkWebSocket.send(url, byteString);
+//    }
 
     /**
      * 不关心WebSocket是否连接，直接发送
@@ -69,9 +69,9 @@ public class OkWebSocket {
     /**
      * 同上，只是消息类型为ByteString
      */
-    public static Observable<Boolean> asyncSend(String url, ByteString byteString){
-        return sOkWebSocket.asyncSend(url,byteString);
-    }
+//    public static Observable<Boolean> asyncSend(String url, ByteString byteString){
+//        return sOkWebSocket.asyncSend(url,byteString);
+//    }
 
     /**
      * 关闭指定Url的连接
