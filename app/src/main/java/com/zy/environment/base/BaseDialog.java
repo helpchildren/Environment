@@ -273,10 +273,6 @@ public class BaseDialog extends Dialog {
         return false;
     }
 
-    public View getView(@IdRes int id) {
-        return view.findViewById(id);
-    }
-
     public interface CountDownListener {
         void onTick(long time);
 

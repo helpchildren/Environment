@@ -14,6 +14,7 @@ import android.widget.Toast;
 import com.zy.environment.R;
 import com.zy.environment.base.BaseDialog;
 import com.zy.environment.config.GlobalSetting;
+import com.zy.environment.widget.SettingDialog;
 
 public class ToolsUtils {
 
@@ -37,66 +38,8 @@ public class ToolsUtils {
         if (mHits[0] >= (SystemClock.uptimeMillis() - DURATION)) {
             mHits = new long[COUNTS];//重新初始化数组
             //弹出密码框
-            showSettingDialog(activity);
+            SettingDialog dialog = new SettingDialog(activity);
+            dialog.show();
         }
-    }
-
-    public static boolean isShowSet = false;
-
-    public static void showSettingDialog(Activity activity) {
-        isShowSet = false;
-        final BaseDialog baseDialog = new BaseDialog(activity, R.style.BaseDialog, R.layout.setting_items);
-        EditText ed_input = (EditText) baseDialog.getView(R.id.ed_input);
-        Button btnCancle = (Button) baseDialog.getView(R.id.btn_cancle);
-        Button btnOk = (Button) baseDialog.getView(R.id.btn_ok);
-        LinearLayout llPassword = (LinearLayout) baseDialog.getView(R.id.ll_password);
-        LinearLayout llSetting = (LinearLayout) baseDialog.getView(R.id.ll_setting);
-        EditText eDeviceserialPort = (EditText) baseDialog.getView(R.id.e_deviceserialPort);
-        EditText eWsurl = (EditText) baseDialog.getView(R.id.e_wsurl);
-        EditText eOutlen = (EditText) baseDialog.getView(R.id.e_outlen);
-        eWsurl.setText(GlobalSetting.wsurl);
-        eDeviceserialPort.setText(GlobalSetting.serialPort);
-        eOutlen.setText(GlobalSetting.outLen+"");
-
-
-        btnOk.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isShowSet){
-                    if (Validate.isNull(eWsurl.getText().toString())
-                            || Validate.isNull(eDeviceserialPort.getText().toString())
-                            || Validate.isNull(eOutlen.getText().toString())){
-                        FylToast.makeText(activity, "配置项不能为空", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    GlobalSetting.wsurl = eWsurl.getText().toString();
-                    GlobalSetting.serialPort = eDeviceserialPort.getText().toString();
-                    GlobalSetting.outLen = Integer.parseInt(eOutlen.getText().toString());
-                    //保存
-                    GlobalSetting.putSetting(activity);
-                    FylToast.makeText(activity, "设置成功", Toast.LENGTH_SHORT).show();
-                    EventBusUtils.post("Refresh Main");
-                    baseDialog.dismiss();
-                }else {
-                    String password = ed_input.getText().toString();
-                    if ("zy123".equals(password)) {
-                        isShowSet = true;
-                        llPassword.setVisibility(View.GONE);
-                        llSetting.setVisibility(View.VISIBLE);
-                    } else {
-                        FylToast.makeText(activity, "密码错误，请重新输入！", Toast.LENGTH_SHORT).show();
-                        ed_input.setText("");
-                    }
-                }
-            }
-        });
-        btnCancle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                baseDialog.dismiss();
-            }
-        });
-        baseDialog.show();
     }
 }

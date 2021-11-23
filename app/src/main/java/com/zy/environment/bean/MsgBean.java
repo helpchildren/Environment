@@ -1,5 +1,7 @@
 package com.zy.environment.bean;
 
+import com.zy.environment.config.GlobalSetting;
+
 public class MsgBean {
 
     private String type; //类型 客户端：login登录、back出袋反馈、qrcode获取二维码广告、
@@ -14,9 +16,10 @@ public class MsgBean {
     public MsgBean() {
     }
 
-    public MsgBean(String type, String device_id) {
+    public MsgBean(String type) {
         this.type = type;
-        this.device_id = device_id;
+//        this.device_id = GlobalSetting.deviceid;
+        this.device_id = "DJEF9BD9A12";
     }
 
     public String getType() {

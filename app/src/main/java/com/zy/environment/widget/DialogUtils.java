@@ -21,7 +21,7 @@ public class DialogUtils {
         return mInstance;
     }
 
-    BaseDialog loadingDialog;
+    private BaseDialog loadingDialog;
 
     public void showLoadingDialog(Context context) {
         showLoadingDialog(context,"加载中...");
@@ -39,9 +39,21 @@ public class DialogUtils {
     /**
      * 关闭dialog
      */
-    public void closeDialog() {
+    public void closeLoadingDialog() {
         if (loadingDialog != null && loadingDialog.isShowing()) {
             loadingDialog.dismiss();
+        }
+    }
+
+    private ErrDialog errDialog;
+
+    public void showErrDialog(Context context, String msg) {
+        if(errDialog == null){
+            errDialog = new ErrDialog(context);// 创建自定义样式dialog
+        }
+        if (!errDialog.isShowing()) {
+            errDialog.message(msg);
+            errDialog.show();
         }
     }
 

@@ -57,4 +57,5 @@ dependencies {
     implementation 'com.github.helpchildren:RxPermissDemo:v1.0.0'
     implementation project(path: ':okwebsocket')
     implementation project(path: ':serialport')
+    implementation project(path: ':machine')
 }

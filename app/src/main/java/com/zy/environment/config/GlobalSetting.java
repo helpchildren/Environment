@@ -11,6 +11,7 @@ public class GlobalSetting {
     public static String deviceid;//设备id
     public static String serialPort = "dev/ttyS0";//设备id
     public static int outLen= 9;//出货长度
+    public static int MachineType = 0;//机头类型 0：易诺 1：鼎旗
 
 
     public static void getSetting(Context context){
