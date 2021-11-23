@@ -2,6 +2,8 @@ package com.zy.environment.bean;
 
 import com.zy.environment.config.GlobalSetting;
 
+import java.util.List;
+
 public class MsgBean {
 
     private String type; //类型 客户端：login登录、back出袋反馈、qrcode获取二维码广告、
@@ -13,13 +15,15 @@ public class MsgBean {
     private String order_type;  //订单类型 0袋子 1口罩
     private String qrcode_url;  //设备二维码地址
 
+    private List<AdvBean> adv;//广告列表
+
     public MsgBean() {
     }
 
     public MsgBean(String type) {
         this.type = type;
-        this.device_id = GlobalSetting.deviceid;
-//        this.device_id = "DJEF9BD9A12";
+//        this.device_id = GlobalSetting.deviceid;
+        this.device_id = "DJEF9BD9A12";
     }
 
     public String getType() {
@@ -78,4 +82,11 @@ public class MsgBean {
         this.qrcode_url = qrcode_url;
     }
 
+    public List<AdvBean> getAdv() {
+        return adv;
+    }
+
+    public void setAdv(List<AdvBean> adv) {
+        this.adv = adv;
+    }
 }

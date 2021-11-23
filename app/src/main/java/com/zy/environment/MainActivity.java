@@ -98,9 +98,16 @@ public class MainActivity extends BaseActivity {
     /*
     * 设备登录
     * */
-    @SuppressLint("CheckResult")
     private void deviceLogin(){
         MsgBean msgBean = new MsgBean("login");
+        socketSend(msgBean);
+    }
+
+    /*
+    * 定时拉取广告
+    * */
+    private void getAdv(){
+        MsgBean msgBean = new MsgBean("qrcode");
         socketSend(msgBean);
     }
 
@@ -122,6 +129,7 @@ public class MainActivity extends BaseActivity {
                 switch(webSocketInfo.getStatus()){
                     case WebSocketStatus.STATUS_CONNECTED://连接成功
                         deviceLogin();
+                        getAdv();
                         showText("服务器连接成功");
                         break;
                      case WebSocketStatus.STATUS_ON_CLOSED://断开连接
@@ -165,18 +173,14 @@ public class MainActivity extends BaseActivity {
                 break;
             case MsgType.TYPE_LOGIN://登录
                 DialogUtils.getInstance().closeLoadingDialog();
-                Glide.with(this)
-                        .load(msgBean.getQrcode_url())
-                        .placeholder(R.drawable.qrcode_bg)
-                        .error(R.drawable.qrcode_bg)
-                        .centerCrop()
-                        .into(ivScanCode);
+                updateQRcode(msgBean.getQrcode_url());
 
                 break;
             case MsgType.TYPE_OUTBACK://出货回调
 
                 break;
             case MsgType.TYPE_QRMSG://二维码广告
+                updateQRcode(msgBean.getQrcode_url());
 
                 break;
             case MsgType.TYPE_OTHER://其他
@@ -231,6 +235,18 @@ public class MainActivity extends BaseActivity {
                 }
             };
 
+
+    /*
+    * 更新二维码
+    * */
+    private void updateQRcode(String qrcode){
+        Glide.with(this)
+                .load(qrcode)
+                .placeholder(R.drawable.qrcode_bg)
+                .error(R.drawable.qrcode_bg)
+                .centerCrop()
+                .into(ivScanCode);
+    }
 
     private void showText(String msg){
         showText(msg, false);
