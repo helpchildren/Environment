@@ -89,7 +89,7 @@ public class MainActivity extends BaseActivity {
     private void initData() {
         GlobalSetting.getSetting(this);
         websocketConnect();
-        machineManage = MachineFactroy.init(GlobalSetting.MachineType);
+        machineManage = MachineFactroy.init(GlobalSetting.machineType);
         machineManage.setOutLength(GlobalSetting.outLen);
         machineManage.openDevice(mListener);
     }

@@ -18,8 +18,8 @@ public class MsgBean {
 
     public MsgBean(String type) {
         this.type = type;
-//        this.device_id = GlobalSetting.deviceid;
-        this.device_id = "DJEF9BD9A12";
+        this.device_id = GlobalSetting.deviceid;
+//        this.device_id = "DJEF9BD9A12";
     }
 
     public String getType() {

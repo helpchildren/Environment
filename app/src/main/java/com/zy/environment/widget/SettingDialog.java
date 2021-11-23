@@ -2,11 +2,14 @@ package com.zy.environment.widget;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,7 +26,8 @@ public class SettingDialog extends BaseDialog {
 
     private EditText ed_input, eDeviceserialPort, eWsurl, eOutlen;
     private LinearLayout llPassword, llSetting;
-    private Button btnCancle, btnOk;
+    private RadioGroup radgroup;
+    private RadioButton btnYN, btnDQ;
 
     public static boolean isShowSet = false;
 
@@ -35,8 +39,8 @@ public class SettingDialog extends BaseDialog {
     @Override
     public void bindView(View v) {
         ed_input = (EditText) findViewById(R.id.ed_input);
-        btnCancle = (Button) findViewById(R.id.btn_cancle);
-        btnOk = (Button) findViewById(R.id.btn_ok);
+        Button btnCancle = (Button) findViewById(R.id.btn_cancle);
+        Button btnOk = (Button) findViewById(R.id.btn_ok);
         llPassword = (LinearLayout) findViewById(R.id.ll_password);
         llSetting = (LinearLayout) findViewById(R.id.ll_setting);
         eDeviceserialPort = (EditText) findViewById(R.id.e_deviceserialPort);
@@ -46,6 +50,26 @@ public class SettingDialog extends BaseDialog {
         eWsurl.setText(GlobalSetting.wsurl);
         eDeviceserialPort.setText(GlobalSetting.serialPort);
         eOutlen.setText(GlobalSetting.outLen+"");
+        if (GlobalSetting.MachineType.YN.getCode() == GlobalSetting.machineType) {
+            btnYN.setChecked(true);
+            btnDQ.setChecked(false);
+        }else {
+            btnYN.setChecked(false);
+            btnDQ.setChecked(true);
+        }
+
+        radgroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton radbtn = (RadioButton)  findViewById(checkedId);
+                if (GlobalSetting.MachineType.YN.getType().equals(radbtn.getText().toString())){
+                    GlobalSetting.machineType = GlobalSetting.MachineType.YN.getCode();
+                }else {
+                    GlobalSetting.machineType = GlobalSetting.MachineType.DQ.getCode();
+                }
+            }
+        });
+
         btnOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

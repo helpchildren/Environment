@@ -28,11 +28,47 @@
     </LinearLayout>
 
     <LinearLayout
-        android:visibility="gone"
+
         android:id="@+id/ll_setting"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
+        <LinearLayout
+            style="@style/settingItem"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/settingtextview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="请选择机头型号:" />
+
+            <RadioGroup
+                android:id="@+id/radioGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/btnYN"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:text="易诺" />
+
+                <RadioButton
+                    android:id="@+id/btnDQ"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="鼎旗" />
+
+            </RadioGroup>
+
+        </LinearLayout>
 
         <LinearLayout
             style="@style/settingItem"
