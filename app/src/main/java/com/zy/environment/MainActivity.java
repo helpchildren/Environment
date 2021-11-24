@@ -2,28 +2,43 @@ package com.zy.environment;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.lake.banner.BannerConfig;
+import com.lake.banner.BannerStyle;
+import com.lake.banner.HBanner;
+import com.lake.banner.ImageGravityType;
+import com.lake.banner.Transformer;
+import com.lake.banner.VideoGravityType;
+import com.lake.banner.loader.ViewItemBean;
 import com.sesxh.okwebsocket.OkWebSocket;
 import com.sesxh.okwebsocket.WebSocketInfo;
 import com.sesxh.okwebsocket.annotation.WebSocketStatus;
 import com.sesxh.rxpermissions.RxPermissions;
 import com.sesxh.yzsspeech.YSpeech;
 import com.zy.environment.base.BaseActivity;
+import com.zy.environment.bean.AdvBean;
 import com.zy.environment.bean.MsgBean;
 import com.zy.environment.bean.MsgType;
 import com.zy.environment.config.GlobalSetting;
-import com.zy.environment.utils.Validate;
-import com.zy.environment.utils.log.Logger;
+import com.zy.environment.utils.FileStorage;
 import com.zy.environment.utils.FylToast;
 import com.zy.environment.utils.ToolsUtils;
+import com.zy.environment.utils.Validate;
+import com.zy.environment.utils.log.Logger;
 import com.zy.environment.widget.DialogUtils;
 import com.zy.machine.MachineFactroy;
 import com.zy.machine.MachineManage;
@@ -32,25 +47,39 @@ import com.zy.machine.OnDataListener;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Flowable;
 import io.reactivex.functions.Consumer;
+
+import static com.lake.banner.BannerConfig.IMAGE;
+import static com.lake.banner.BannerConfig.VIDEO;
 
 
 public class MainActivity extends BaseActivity {
 
     private static final String TAG="MainActivity";
+    private Activity context;
+
     private ImageView ivScanCode;
     private TextView tvDeviceid;
+
     private final Gson gson = new Gson();
     private MachineManage machineManage;//硬件连接
     private String order_sn = "";
-
+    public boolean mAdvStop = false;//定时任务停止标记
+    private List<AdvBean> mAdvList;//广告列表
+    private HBanner banner;//轮播
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
         initPermission();//权限申请
         findViewById();
         initView();
@@ -59,8 +88,27 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        banner.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        banner.onPause();
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        banner.onStop();
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        mAdvStop = true;
         if (machineManage != null)
             machineManage.closeDevice();
     }
@@ -76,7 +124,15 @@ public class MainActivity extends BaseActivity {
 
 
     private void initView() {
-        GlobalSetting.deviceid = ToolsUtils.getDeviceId(this);
+        //todo 测试
+//        List<AdvBean> advList = new ArrayList<>();
+//        advList.add(new AdvBean("5", "贵宾3广告", "2", "https://bag.cnwinall.cn/storage/upload/20211105/ac3b508a0466e0730e3a5a93075605ad.mp4"));
+//        advList.add(new AdvBean("7", "534543", "1", "https://bag.cnwinall.cn/storage/upload/20211108/c58ad4b0e634ad0b93b4da23e08440da.jpg"));
+//        advList.add(new AdvBean("13", "655633", "1", "https://bag.cnwinall.cn/storage/upload/20211108/da6bea145272b59238c3dceff3b3df08.png"));
+//        advList.add(new AdvBean("16", "233424", "2", "https://bag.cnwinall.cn/storage/upload/20211109/d219678ae0aedd19d198766168e6a9f3.mp4"));
+//        FileStorage.saveToFile(GlobalSetting.AdvPath, GlobalSetting.AdFile, gson.toJson(advList));
+
+        GlobalSetting.deviceid = ToolsUtils.getDeviceId(context);
         tvDeviceid.setText("设备号："+ GlobalSetting.deviceid);
         tvDeviceid.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,16 +140,41 @@ public class MainActivity extends BaseActivity {
                 ToolsUtils.continuousClick(activity);//进入设置页面
             }
         });
+        //轮播初始化
+        List<ViewItemBean> list = new ArrayList<>();
+        banner.setViews(list)
+                .setBannerAnimation(Transformer.Default)//换场方式
+                .setBannerStyle(BannerStyle.CIRCLE_INDICATOR_TITLE)//指示器模式
+                .setCache(true)//可以不用设置，默认为true
+//                .setCachePath(getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath() + File.separator + "hbanner")
+                .setCachePath(GlobalSetting.AdvPath + File.separator + "hbanner")
+                .setVideoGravity(VideoGravityType.CENTER)//视频布局方式
+                .setImageGravity(ImageGravityType.FIT_XY)//图片布局方式
+                .setPageBackgroundColor(Color.BLACK)//设置背景
+                .setShowTitle(false)//是否显示标题
+                .setViewPagerIsScroll(true)//是否支持手滑
+                .start();
+
+        //本地广告获取
+        String advJson = FileStorage.getFileText(GlobalSetting.AdvPath, GlobalSetting.AdFile);
+        if (Validate.noNull(advJson)){
+            Type listType = new TypeToken<List<AdvBean>>() {}.getType();
+            mAdvList = gson.fromJson(advJson, listType);
+            Logger.i(TAG,"本地广告列表："+advJson);
+        }else {
+            mAdvList = new ArrayList<>();
+        }
+        updateAdv(mAdvList);
     }
 
     private void initData() {
-        GlobalSetting.getSetting(this);
+        GlobalSetting.getSetting(context);
         websocketConnect();
-        machineManage = MachineFactroy.init(GlobalSetting.machineType);
+        //获取硬件控制
+        machineManage = MachineFactroy.init(GlobalSetting.machineType, context);
         machineManage.setOutLength(GlobalSetting.outLen);
         machineManage.openDevice(mListener);
     }
-
 
     /*
     * 设备登录
@@ -106,9 +187,15 @@ public class MainActivity extends BaseActivity {
     /*
     * 定时拉取广告
     * */
+    @SuppressLint("CheckResult")
     private void getAdv(){
-        MsgBean msgBean = new MsgBean("qrcode");
-        socketSend(msgBean);
+        mAdvStop = false;
+        //定时获取广告信息 5分钟一次
+        Flowable.interval(2, 5, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
+            Logger.i(TAG,"定时任务 拉取广告："+aLong);
+            MsgBean msgBean = new MsgBean("qrcode");
+            socketSend(msgBean);
+        });
     }
 
     private void socketSend(MsgBean msgBean){
@@ -181,7 +268,8 @@ public class MainActivity extends BaseActivity {
                 break;
             case MsgType.TYPE_QRMSG://二维码广告
                 updateQRcode(msgBean.getQrcode_url());
-
+                //todo 合并广告
+                updateAdv(msgBean.getAdv());
                 break;
             case MsgType.TYPE_OTHER://其他
                 showText("消息提示："+msgBean.getMsg());
@@ -235,12 +323,34 @@ public class MainActivity extends BaseActivity {
                 }
             };
 
+    /*
+    * 更新广告
+    * */
+    private void updateAdv(List<AdvBean> advList) {
+        if (advList != null && advList.size()>0 ){
+            List<ViewItemBean> bannerList = new ArrayList<>();
+            for (int i = 0; i < advList.size(); i++) {
+                AdvBean advBean = advList.get(i);
+                if (advBean.isVideo()){
+                    int time = ToolsUtils.getVideoTime(context, Uri.parse(advBean.getUrl()));
+                    time = time !=0 ? time:BannerConfig.TIME;
+                    bannerList.add(new ViewItemBean(VIDEO, advBean.getScreen_name(), advBean.getUrl(), time));
+                }else {
+                    bannerList.add(new ViewItemBean(IMAGE, advBean.getScreen_name(), Uri.parse(advBean.getUrl()), BannerConfig.TIME));
+                }
+            }
+            banner.update(bannerList);
+            banner.setVisibility(View.VISIBLE);
+        }else {
+            banner.setVisibility(View.GONE);
+        }
+    }
 
     /*
     * 更新二维码
     * */
     private void updateQRcode(String qrcode){
-        Glide.with(this)
+        Glide.with(context)
                 .load(qrcode)
                 .placeholder(R.drawable.qrcode_bg)
                 .error(R.drawable.qrcode_bg)
@@ -268,6 +378,7 @@ public class MainActivity extends BaseActivity {
     private void findViewById() {
         ivScanCode = (ImageView) findViewById(R.id.iv_scan_code);
         tvDeviceid = (TextView) findViewById(R.id.tv_deviceid);
+        banner = (HBanner) findViewById(R.id.banner);
     }
 
     /**

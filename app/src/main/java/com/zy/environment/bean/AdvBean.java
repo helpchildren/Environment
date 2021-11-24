@@ -10,6 +10,16 @@ public class AdvBean {
     private String type;//广告类型 1：图片 2：视频
     private String url;//下载路径
 
+    public AdvBean() {
+    }
+
+    public AdvBean(String id, String screen_name, String type, String url) {
+        this.id = id;
+        this.screen_name = screen_name;
+        this.type = type;
+        this.url = url;
+    }
+
     public String getId() {
 
         return id;
@@ -35,6 +45,10 @@ public class AdvBean {
         this.type = type;
     }
 
+    public boolean isVideo() {
+        return "2".equals(type);
+    }
+
     public String getUrl() {
         return url;
     }
@@ -42,4 +56,5 @@ public class AdvBean {
     public void setUrl(String url) {
         this.url = url;
     }
+
 }

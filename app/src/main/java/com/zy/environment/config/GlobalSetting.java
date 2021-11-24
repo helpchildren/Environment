@@ -1,10 +1,15 @@
 package com.zy.environment.config;
 
 import android.content.Context;
+import android.os.Environment;
 
 import com.zy.environment.utils.SpStorage;
 
 public class GlobalSetting {
+
+    private static final String externpath = Environment.getExternalStorageDirectory().getAbsolutePath();
+    public static final String AdvPath = externpath + "/zy/adv";
+    public static final String AdFile = "adv.txt";
 
     public static String wsurl = "ws://47.93.97.68:2348";//服务器地址
 

@@ -19,6 +19,8 @@ public interface OnDataListener {
      * errcode 1003 切刀故障
      * errcode 1004 卡袋
      * errcode 1005 串通讯错误
+     * errcode 1006 出货失败
+     * errcode 1006 出货失败
      * */
     void onError(int errcode, String err);
 

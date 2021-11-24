@@ -2,23 +2,22 @@ package com.zy.environment.utils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.provider.Settings;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.util.Log;
 
-import com.zy.environment.R;
-import com.zy.environment.base.BaseDialog;
-import com.zy.environment.config.GlobalSetting;
 import com.zy.environment.widget.SettingDialog;
+
+import java.io.IOException;
 
 public class ToolsUtils {
 
 
+    /*
+    * 获取设备id
+    * */
     public static String getDeviceId(Context context){
         String str = Settings.System.getString(context.getContentResolver(), "android_id").toUpperCase();
         StringBuilder stringBuilder = new StringBuilder();
@@ -27,6 +26,9 @@ public class ToolsUtils {
         return stringBuilder.toString();
     }
 
+    /*
+    * 进入设置页面
+    * */
     final static int COUNTS = 3;// 点击次数
     final static long DURATION = 1000;// 规定有效时间
     static long[] mHits = new long[COUNTS];
@@ -42,4 +44,23 @@ public class ToolsUtils {
             dialog.show();
         }
     }
+
+    /*
+    * 获取视频时长
+    * */
+    public static int getVideoTime(Context context, Uri uri){
+        int time = 0;
+        MediaPlayer mediaPlayer = new MediaPlayer();
+        long startT = System.currentTimeMillis();
+        try {
+            mediaPlayer.setDataSource(context, uri);
+            mediaPlayer.prepare();
+            time = mediaPlayer.getDuration();
+            Log.e("lfntest","获取视频时长："+time+"  耗时："+(System.currentTimeMillis()-startT));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return time;
+    }
+
 }

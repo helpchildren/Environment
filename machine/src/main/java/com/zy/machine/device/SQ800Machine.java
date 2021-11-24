@@ -7,7 +7,7 @@ import com.zy.machine.MachineManage;
 import com.zy.machine.OnDataListener;
 
 /*
-* SQ800机器管理 --易诺
+* SQ800机器管理 --鼎旗
 * */
 public class SQ800Machine extends MachineManage {
 
@@ -56,13 +56,11 @@ public class SQ800Machine extends MachineManage {
 
     public void closeDevice() {
         flag = false;
-        if (receiveThread != null) receiveThread = null;
-        int ret = obj_tcm.dgReleasePort(fd);
-        if(ret==0) {
-            if (listener != null) listener.onDisConnect();
-        }else{
-            if (listener != null) listener.onError(1000,"串口"+devicesPort+" 打开失败");
-        }
+        if (receiveThread != null)
+            receiveThread = null;
+        obj_tcm.dgReleasePort(fd);
+        if (listener != null)
+            listener.onDisConnect();
     }
 
     public void outGoods(){
