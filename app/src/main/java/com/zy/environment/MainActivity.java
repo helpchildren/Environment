@@ -3,16 +3,14 @@ package com.zy.environment;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
@@ -34,6 +32,7 @@ import com.zy.environment.bean.AdvBean;
 import com.zy.environment.bean.MsgBean;
 import com.zy.environment.bean.MsgType;
 import com.zy.environment.config.GlobalSetting;
+import com.zy.environment.utils.DownloadUtil;
 import com.zy.environment.utils.FileStorage;
 import com.zy.environment.utils.FylToast;
 import com.zy.environment.utils.ToolsUtils;
@@ -50,6 +49,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -69,10 +69,11 @@ public class MainActivity extends BaseActivity {
     private TextView tvDeviceid;
 
     private final Gson gson = new Gson();
+    private Handler mHandler = new Handler();
     private MachineManage machineManage;//硬件连接
     private String order_sn = "";
     public boolean mAdvStop = false;//定时任务停止标记
-    private List<AdvBean> mAdvList;//广告列表
+    private List<AdvBean> mAdvList = new ArrayList<>();//本地广告列表
     private HBanner banner;//轮播
 
     @Override
@@ -122,16 +123,7 @@ public class MainActivity extends BaseActivity {
         initData();//刷新连接
     }
 
-
     private void initView() {
-        //todo 测试
-//        List<AdvBean> advList = new ArrayList<>();
-//        advList.add(new AdvBean("5", "贵宾3广告", "2", "https://bag.cnwinall.cn/storage/upload/20211105/ac3b508a0466e0730e3a5a93075605ad.mp4"));
-//        advList.add(new AdvBean("7", "534543", "1", "https://bag.cnwinall.cn/storage/upload/20211108/c58ad4b0e634ad0b93b4da23e08440da.jpg"));
-//        advList.add(new AdvBean("13", "655633", "1", "https://bag.cnwinall.cn/storage/upload/20211108/da6bea145272b59238c3dceff3b3df08.png"));
-//        advList.add(new AdvBean("16", "233424", "2", "https://bag.cnwinall.cn/storage/upload/20211109/d219678ae0aedd19d198766168e6a9f3.mp4"));
-//        FileStorage.saveToFile(GlobalSetting.AdvPath, GlobalSetting.AdFile, gson.toJson(advList));
-
         GlobalSetting.deviceid = ToolsUtils.getDeviceId(context);
         tvDeviceid.setText("设备号："+ GlobalSetting.deviceid);
         tvDeviceid.setOnClickListener(new View.OnClickListener() {
@@ -145,14 +137,13 @@ public class MainActivity extends BaseActivity {
         banner.setViews(list)
                 .setBannerAnimation(Transformer.Default)//换场方式
                 .setBannerStyle(BannerStyle.CIRCLE_INDICATOR_TITLE)//指示器模式
-                .setCache(true)//可以不用设置，默认为true
-//                .setCachePath(getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath() + File.separator + "hbanner")
-                .setCachePath(GlobalSetting.AdvPath + File.separator + "hbanner")
+                .setCache(false)//可以不用设置，默认为true
+//                .setCachePath(GlobalSetting.AdvPath + File.separator + "hbanner")
                 .setVideoGravity(VideoGravityType.CENTER)//视频布局方式
                 .setImageGravity(ImageGravityType.FIT_XY)//图片布局方式
                 .setPageBackgroundColor(Color.BLACK)//设置背景
                 .setShowTitle(false)//是否显示标题
-                .setViewPagerIsScroll(true)//是否支持手滑
+                .setViewPagerIsScroll(false)//是否支持手滑
                 .start();
 
         //本地广告获取
@@ -160,11 +151,11 @@ public class MainActivity extends BaseActivity {
         if (Validate.noNull(advJson)){
             Type listType = new TypeToken<List<AdvBean>>() {}.getType();
             mAdvList = gson.fromJson(advJson, listType);
-            Logger.i(TAG,"本地广告列表："+advJson);
+            Logger.i(TAG,"本地广告列表获取 mAdvList："+ Arrays.toString(mAdvList.toArray()));
         }else {
             mAdvList = new ArrayList<>();
         }
-        updateAdv(mAdvList);
+        updateAdv();
     }
 
     private void initData() {
@@ -208,23 +199,26 @@ public class MainActivity extends BaseActivity {
      * */
     @SuppressLint("CheckResult")
     private void websocketConnect() {
-        DialogUtils.getInstance().showLoadingDialog(activity,"设备连接中...");
         OkWebSocket.get(GlobalSetting.wsurl).subscribe(new Consumer<WebSocketInfo>() {
             @Override
             public void accept(WebSocketInfo webSocketInfo) throws Exception {
                 Logger.e(TAG, "客户端收到消息：" + webSocketInfo.toString());
                 switch(webSocketInfo.getStatus()){
                     case WebSocketStatus.STATUS_CONNECTED://连接成功
+                        DialogUtils.getInstance().closeErrDialog();
                         deviceLogin();
                         getAdv();
                         showText("服务器连接成功");
                         break;
                      case WebSocketStatus.STATUS_ON_CLOSED://断开连接
-                        DialogUtils.getInstance().closeLoadingDialog();
                         break;
                     case WebSocketStatus.STATUS_ON_FAILURE://连接异常
-                        DialogUtils.getInstance().closeLoadingDialog();
-                        showText("服务器连接失败", true);
+                        showText("服务器连接失败，等待重连中...", true);
+                        mHandler.postDelayed(new Runnable() {
+                            public void run() {
+                                websocketConnect(); //重连socket
+                            }
+                        }, 10*1000);
                         break;
                     case WebSocketStatus.STATUS_ON_REPLY://收到服务端消息
                         Type listType = new TypeToken<MsgBean>() {}.getType();
@@ -267,9 +261,8 @@ public class MainActivity extends BaseActivity {
 
                 break;
             case MsgType.TYPE_QRMSG://二维码广告
-                updateQRcode(msgBean.getQrcode_url());
-                //todo 合并广告
-                updateAdv(msgBean.getAdv());
+                updateQRcode(msgBean.getQrcode_url());//更新二维码
+                comparisonList(msgBean.getAdv());//合并广告
                 break;
             case MsgType.TYPE_OTHER://其他
                 showText("消息提示："+msgBean.getMsg());
@@ -323,20 +316,116 @@ public class MainActivity extends BaseActivity {
                 }
             };
 
+
+
+
+    private int downCount = 0;//下载计数
+    /*
+    * 广告列表下载比对
+     * */
+    private void comparisonList(List<AdvBean> advList){
+        //先判断两个列表是否相同
+        if (!ToolsUtils.isListEqual(mAdvList, advList)){
+            //不相同开始处理
+            // 先去重
+            mAdvList.removeAll(advList);
+            List<AdvBean> delList = new ArrayList<>(mAdvList);
+            if (delList.size() > 0){
+                //有多余的就删除
+                for (int i = 0; i < delList.size(); i++) {
+                    FileStorage.delete(GlobalSetting.AdvPath +File.separator+ delList.get(i).getDirName());
+                }
+            }
+            //重新赋值
+            mAdvList = new ArrayList<>(advList);
+            Logger.e("lfntest","重新赋值 mAdvList："+ Arrays.toString(mAdvList.toArray()));
+
+            //统计新增得广告并下载
+            List<AdvBean> downAdvList = new ArrayList<>();//广告临时表
+            for (int i = 0; i < mAdvList.size(); i++) {
+                AdvBean advBean = mAdvList.get(i);
+                String dirName;
+                if (advBean.isVideo()){
+                    dirName = "Video_"+advBean.getId()+ DownloadUtil.VIDEO;
+                }else {
+                    dirName = "Image_"+advBean.getId()+ DownloadUtil.IMAGE;
+                }
+                advBean.setDirName(dirName);
+                if (!DownloadUtil.fileIsExists(dirName, GlobalSetting.AdvPath, advBean.isVideo()?DownloadUtil.VIDEO:DownloadUtil.IMAGE)) {
+                    downAdvList.add(advBean);//未下载的先记录
+                }
+            }
+
+            if (downAdvList.size() > 0){
+                downCount = 0;
+                for (int i = 0; i < downAdvList.size(); i++) {
+                    AdvBean advBean = downAdvList.get(i);
+                    //文件不存在则下载
+                    DownloadUtil.get().download(advBean.getUrl(), GlobalSetting.AdvPath, advBean.getDirName(), new DownloadUtil.OnDownloadListener() {
+                        @Override
+                        public void onDownloadSuccess(File file, String fileName) {
+                            downCount++;
+                            Logger.e(TAG, "下载成功:"+fileName+" "+downCount);
+                            if (downCount == downAdvList.size()){
+                                composeList();
+                            }
+                        }
+
+                        @Override
+                        public void onDownloading(int progress) {
+                            // 进度条
+                        }
+
+                        @Override
+                        public void onDownloadFailed(Exception e) {
+                            e.printStackTrace();
+                            downCount++;
+                            Logger.e(TAG, "下载失败:"+e.getMessage()+" "+downCount);
+                            if (downCount == downAdvList.size()){
+                                composeList();
+                            }
+                        }
+                    });
+
+                }
+            }else {
+                composeList();
+            }
+        }
+    }
+
+    /*
+    * 组合List
+    * */
+    private void composeList(){
+        Logger.e("lfntest","下载完成后的 mAdvList："+ Arrays.toString(mAdvList.toArray()));
+        //缓存到本地
+        FileStorage.saveToFile(GlobalSetting.AdvPath, GlobalSetting.AdFile, gson.toJson(mAdvList));
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                updateAdv();
+            }
+        });
+    }
+
+
+
     /*
     * 更新广告
     * */
-    private void updateAdv(List<AdvBean> advList) {
-        if (advList != null && advList.size()>0 ){
+    private void updateAdv() {
+        if (mAdvList != null && mAdvList.size()>0 ){
             List<ViewItemBean> bannerList = new ArrayList<>();
-            for (int i = 0; i < advList.size(); i++) {
-                AdvBean advBean = advList.get(i);
+            for (int i = 0; i < mAdvList.size(); i++) {
+                AdvBean advBean = mAdvList.get(i);
+//                Uri uri = ToolsUtils.getUriForFileName(advBean.getDirName());
                 if (advBean.isVideo()){
-                    int time = ToolsUtils.getVideoTime(context, Uri.parse(advBean.getUrl()));
+                    int time = ToolsUtils.getVideoTime(advBean.getDirPath());
                     time = time !=0 ? time:BannerConfig.TIME;
-                    bannerList.add(new ViewItemBean(VIDEO, advBean.getScreen_name(), advBean.getUrl(), time));
+                    bannerList.add(new ViewItemBean(VIDEO, advBean.getScreen_name(), advBean.getDirPath(), time));
                 }else {
-                    bannerList.add(new ViewItemBean(IMAGE, advBean.getScreen_name(), Uri.parse(advBean.getUrl()), BannerConfig.TIME));
+                    bannerList.add(new ViewItemBean(IMAGE, advBean.getScreen_name(), advBean.getDirPath(), BannerConfig.TIME));
                 }
             }
             banner.update(bannerList);
@@ -357,6 +446,7 @@ public class MainActivity extends BaseActivity {
                 .centerCrop()
                 .into(ivScanCode);
     }
+
 
     private void showText(String msg){
         showText(msg, false);

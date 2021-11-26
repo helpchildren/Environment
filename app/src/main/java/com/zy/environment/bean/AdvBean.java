@@ -1,5 +1,11 @@
 package com.zy.environment.bean;
 
+import android.net.Uri;
+
+import com.zy.environment.config.GlobalSetting;
+
+import java.io.File;
+
 /*
 * 广告类
 * */
@@ -9,6 +15,8 @@ public class AdvBean {
     private String screen_name;//广告名
     private String type;//广告类型 1：图片 2：视频
     private String url;//下载路径
+
+    private String dirName;//本地文件名
 
     public AdvBean() {
     }
@@ -57,4 +65,40 @@ public class AdvBean {
         this.url = url;
     }
 
+    public String getDirName() {
+        return dirName;
+    }
+
+    public void setDirName(String dirName) {
+        this.dirName = dirName;
+    }
+
+    public String getDirPath() {
+        return GlobalSetting.AdvPath +File.separator+ dirName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AdvBean)) {
+            return false;
+        }
+        AdvBean bean = (AdvBean) obj;
+        return this.id.equals(bean.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "id='" + id + '\'' +
+                ", screen_name='" + screen_name + '\'' +
+                ", type='" + type + '\'' +
+                ", url='" + url + '\'' +
+                ", dirName='" + dirName + '\'' +
+                '}';
+    }
 }

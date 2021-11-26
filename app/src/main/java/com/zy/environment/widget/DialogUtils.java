@@ -57,4 +57,10 @@ public class DialogUtils {
         }
     }
 
+    public void closeErrDialog() {
+        if(errDialog != null || errDialog.isShowing()){
+            errDialog.dismiss();// 创建自定义样式dialog
+        }
+    }
+
 }

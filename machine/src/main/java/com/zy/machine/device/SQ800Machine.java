@@ -76,11 +76,6 @@ public class SQ800Machine extends MachineManage {
      * 接收数据线程
      */
     private void receiveThread(){
-        if(receiveThread != null){
-            return;
-        }
-        /*创建子线程接收串口数据
-         */
         receiveThread = new Thread(){
             @Override
             public void run() {

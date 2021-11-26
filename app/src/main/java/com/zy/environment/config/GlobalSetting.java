@@ -24,6 +24,7 @@ public class GlobalSetting {
         serialPort = (String) mSp.getSharedPreference("serialPort", serialPort);
         outLen = (Integer) mSp.getSharedPreference("outLen", outLen);
         machineType = (Integer) mSp.getSharedPreference("machineType", machineType);
+        putSetting(context);
     }
 
     public static void putSetting(Context context){
