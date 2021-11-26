@@ -24,6 +24,7 @@ public class BaseApplication extends Application {
         //日志打印初始化
         XLogUtils.getInstance()
                 .setDebugLog(true)
+                .setCleardate(5)
                 .setFoldername("zy/"+getPackageName()+"/ToolXLog")
                 .XlogInit();
         //初始化崩溃打印

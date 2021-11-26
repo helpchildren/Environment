@@ -5,11 +5,13 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,8 +28,7 @@ public class SettingDialog extends BaseDialog {
 
     private EditText ed_input, eDeviceserialPort, eWsurl, eOutlen;
     private LinearLayout llPassword, llSetting;
-    private RadioGroup radgroup;
-    private RadioButton btnYN, btnDQ;
+    private Switch s_isDebugLog;
 
     public static boolean isShowSet = false;
 
@@ -46,10 +47,18 @@ public class SettingDialog extends BaseDialog {
         eDeviceserialPort = (EditText) findViewById(R.id.e_deviceserialPort);
         eWsurl  = (EditText) findViewById(R.id.e_wsurl);
         eOutlen  = (EditText) findViewById(R.id.e_outlen);
-        radgroup  = (RadioGroup) findViewById(R.id.radioGroup);
-        btnYN  = (RadioButton) findViewById(R.id.btnYN);
-        btnDQ  = (RadioButton) findViewById(R.id.btnDQ);
+        s_isDebugLog  = (Switch) findViewById(R.id.s_Log);
+        RadioGroup radgroup  = (RadioGroup) findViewById(R.id.radioGroup);
+        RadioButton btnYN  = (RadioButton) findViewById(R.id.btnYN);
+        RadioButton btnDQ  = (RadioButton) findViewById(R.id.btnDQ);
 
+
+        s_isDebugLog.setChecked(GlobalSetting.isDugLog);
+        s_isDebugLog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                GlobalSetting.isDugLog = isChecked;
+            }
+        });
 
         eWsurl.setText(GlobalSetting.wsurl);
         eDeviceserialPort.setText(GlobalSetting.serialPort);

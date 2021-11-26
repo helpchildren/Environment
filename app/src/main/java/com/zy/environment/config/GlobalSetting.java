@@ -18,12 +18,16 @@ public class GlobalSetting {
     public static int outLen= 9;//出货长度
     public static int machineType = MachineType.YN.getCode();//机头类型 0：益诺 1：鼎戟
 
+    public static boolean isDugLog = false;//是否开启文件日志
+
+
     public static void getSetting(Context context){
         SpStorage mSp = new SpStorage(context, "zy-environment");
         wsurl = (String) mSp.getSharedPreference("wsurl", wsurl);
         serialPort = (String) mSp.getSharedPreference("serialPort", serialPort);
         outLen = (Integer) mSp.getSharedPreference("outLen", outLen);
         machineType = (Integer) mSp.getSharedPreference("machineType", machineType);
+        isDugLog = (Boolean) mSp.getSharedPreference("isDugLog", isDugLog);
         putSetting(context);
     }
 
@@ -33,6 +37,7 @@ public class GlobalSetting {
         mSp.put("serialPort", serialPort);
         mSp.put("outLen", outLen);
         mSp.put("machineType", machineType);
+        mSp.put("isDugLog", isDugLog);
         mSp.apply();
     }
 

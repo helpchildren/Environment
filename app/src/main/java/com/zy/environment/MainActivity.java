@@ -83,6 +83,7 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Logger.d("MainActivity", "应用启动");
         initPermission();//权限申请
         findViewById();
         initView();
@@ -120,7 +121,7 @@ public class MainActivity extends BaseActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void handlerEvent(String event) {
-        Logger.e("MainActivity", "handlerEvent---event:"+event);
+        Logger.d("MainActivity", "应用刷新");
         OkWebSocket.closeAllNow();
         if (machineManage != null)
             machineManage.closeDevice();
@@ -157,7 +158,7 @@ public class MainActivity extends BaseActivity {
         if (Validate.noNull(advJson)){
             Type listType = new TypeToken<List<AdvBean>>() {}.getType();
             mAdvList = gson.fromJson(advJson, listType);
-            Logger.i(TAG,"本地广告列表获取 mAdvList："+ Arrays.toString(mAdvList.toArray()));
+            Logger.d(TAG,"本地广告列表获取 mAdvList："+ Arrays.toString(mAdvList.toArray()));
         }else {
             mAdvList = new ArrayList<>();
         }
@@ -199,7 +200,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void socketSend(MsgBean msgBean){
-        Logger.e(TAG, "客户端发送消息：" + gson.toJson(msgBean));
+        Logger.d(TAG, "客户端发送消息：" + gson.toJson(msgBean));
         OkWebSocket.send(GlobalSetting.wsurl, gson.toJson(msgBean)).subscribe();
     }
 
@@ -211,7 +212,7 @@ public class MainActivity extends BaseActivity {
         OkWebSocket.get(GlobalSetting.wsurl).subscribe(new Consumer<WebSocketInfo>() {
             @Override
             public void accept(WebSocketInfo webSocketInfo) throws Exception {
-                Logger.e(TAG, "客户端收到消息：" + webSocketInfo.toString());
+                Logger.d(TAG, "客户端收到消息：" + webSocketInfo.toString());
                 switch(webSocketInfo.getStatus()){
                     case WebSocketStatus.STATUS_CONNECTED://连接成功
                         DialogUtils.getInstance().closeErrDialog();
@@ -239,7 +240,6 @@ public class MainActivity extends BaseActivity {
                         }
                         break;
                     default:
-                        DialogUtils.getInstance().closeLoadingDialog();
                         break;
                 }
 
@@ -257,14 +257,13 @@ public class MainActivity extends BaseActivity {
                 order_sn = msgBean.getOrder_sn();
                 //调用硬件部分
                 machineManage.outGoods();
+                Logger.d(TAG, "开始出袋");
                 break;
             case MsgType.TYPE_HEART://心跳
 
                 break;
             case MsgType.TYPE_LOGIN://登录
-                DialogUtils.getInstance().closeLoadingDialog();
                 updateQRcode(msgBean.getQrcode_url());
-
                 break;
             case MsgType.TYPE_OUTBACK://出货回调
 
@@ -288,17 +287,17 @@ public class MainActivity extends BaseActivity {
 
                 @Override
                 public void onConnect() {
-                    Logger.d(TAG,"device onConnect");
+                    Logger.d(TAG,"机头 onConnect");
                 }
 
                 @Override
                 public void onDisConnect() {
-                    Logger.d(TAG,"device onDisConnect");
+                    Logger.d(TAG,"机头 onDisConnect");
                 }
 
                 @Override
                 public void onError(int errcode,String err) {
-                    Logger.e(TAG,"onError:"+err);
+                    Logger.d(TAG,"onError:"+err);
                     if (Validate.noNull(order_sn)){
                         MsgBean msgBean = new MsgBean("back");
                         msgBean.setOrder_sn(order_sn);
@@ -315,7 +314,7 @@ public class MainActivity extends BaseActivity {
 
                 @Override
                 public void onSuccess() {
-                    Logger.e(TAG,"出袋成功");
+                    Logger.d(TAG,"出袋成功");
                     showText("出袋成功");
                     MsgBean msgBean = new MsgBean("back");
                     msgBean.setOrder_sn(order_sn);
@@ -462,7 +461,7 @@ public class MainActivity extends BaseActivity {
         UpdataController.getUpDataInfo(activity, new UpdataCallback() {
             @Override
             public void onUpdate(boolean isNeed, UpdateInfo info) {
-                Log.e("lfntest", "获取更新信息成功：" + info.toString());
+                Logger.d("lfntest", "获取更新信息成功：" + info.toString());
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -475,7 +474,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onError(String msg) {
-                Log.e("lfntest", "获取更新失败：" + msg);
+                Logger.d("lfntest", "获取更新失败：" + msg);
             }
         });
     }

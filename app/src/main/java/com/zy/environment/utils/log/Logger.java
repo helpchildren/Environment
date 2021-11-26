@@ -3,6 +3,8 @@ package com.zy.environment.utils.log;
 
 import android.util.Log;
 
+import com.zy.environment.config.GlobalSetting;
+
 /**
  * @author LYH
  * @date 2021/1/15
@@ -21,7 +23,9 @@ public class Logger {
     }
 
     public static void d(String tag, String message) {
-        if (sDebug) {
+        if (GlobalSetting.isDugLog) {
+            XLogUtils.d(tag, message);
+        }else {
             Log.d(tag, message);
         }
     }

@@ -34,6 +34,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <Switch
+            android:id="@+id/s_Log"
+            style="@style/settingtextview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="本地日志记录" />
+
         <LinearLayout
             style="@style/settingItem"
             android:gravity="center_vertical"

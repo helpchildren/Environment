@@ -1,5 +1,6 @@
 package com.zy.machine.device;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.dingee.tcmsdk.TicketModule;
@@ -48,6 +49,7 @@ public class SQ800Machine extends MachineManage {
         Log.d(TAG,"dgOpenPort :" + fd);
         if(fd > 0){
             flag = true;
+            receiveThread();
             if (listener != null) listener.onConnect();
         }else{
             if (listener != null) listener.onError(1000,"串口"+devicesPort+" 打开失败");
@@ -56,6 +58,7 @@ public class SQ800Machine extends MachineManage {
 
     public void closeDevice() {
         flag = false;
+        isOutGoodsFlag = false;
         if (receiveThread != null)
             receiveThread = null;
         obj_tcm.dgReleasePort(fd);
@@ -63,9 +66,11 @@ public class SQ800Machine extends MachineManage {
             listener.onDisConnect();
     }
 
+    private boolean isOutGoodsFlag = false;//出货标志
+
     public void outGoods(){
         if (flag){
-            receiveThread();
+            isOutGoodsFlag = true;
         }else {
             if (listener != null) listener.onError(1000,"控制机头未连接");
         }
@@ -76,31 +81,39 @@ public class SQ800Machine extends MachineManage {
      * 接收数据线程
      */
     private void receiveThread(){
+        if(receiveThread != null){
+            return;
+        }
         receiveThread = new Thread(){
             @Override
             public void run() {
-                int ret = obj_tcm.dgCutTicket(fd, iCurDevAddr,TicketModule.TICKET_OUT_CAL_INCH ,outLength,9 );
-                switch(ret) {
-                    case TicketModule.RSLT_OUT_TICKET_SUCC:
-                        listener.onSuccess();
-                        break;
-                    case TicketModule.RSLT_OUT_TICKET_NOPAPER:
-                        listener.onError(1001,"出袋失败:无袋");
-                        break;
-                    case TicketModule.RSLT_OUT_TICKET_NOT_TAKEN:
-                        listener.onError(1002,"出袋失败:出袋口有袋未取走");
-                        break;
-                    case TicketModule.RSLT_OUT_TICKET_KNIFE_ERR:
-                        listener.onError(1003,"出袋失败:切刀故障");
-                        break;
-                    case TicketModule.RSLT_OUT_TICKET_PAPERJAM:
-                        listener.onError(1004,"出袋失败:发生卡袋");
-                        break;
-                    default:
-                        listener.onError(1005,"出袋失败:通讯错误");
-                        break;
+                while (flag){
+                    if (isOutGoodsFlag){
+                        int ret = obj_tcm.dgCutTicket(fd, iCurDevAddr,TicketModule.TICKET_OUT_CAL_INCH ,outLength,9 );
+                        switch(ret) {
+                            case TicketModule.RSLT_OUT_TICKET_SUCC:
+                                listener.onSuccess();
+                                break;
+                            case TicketModule.RSLT_OUT_TICKET_NOPAPER:
+                                listener.onError(1001,"出袋失败:无袋");
+                                break;
+                            case TicketModule.RSLT_OUT_TICKET_NOT_TAKEN:
+                                listener.onError(1002,"出袋失败:出袋口有袋未取走");
+                                break;
+                            case TicketModule.RSLT_OUT_TICKET_KNIFE_ERR:
+                                listener.onError(1003,"出袋失败:切刀故障");
+                                break;
+                            case TicketModule.RSLT_OUT_TICKET_PAPERJAM:
+                                listener.onError(1004,"出袋失败:发生卡袋");
+                                break;
+                            default:
+                                listener.onError(1005,"出袋失败:通讯错误");
+                                break;
+                        }
+                        isOutGoodsFlag = false;
+                    }
+                    SystemClock.sleep(1000);
                 }
-
             }
         };
         //启动接收线程

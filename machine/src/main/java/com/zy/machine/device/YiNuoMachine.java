@@ -1,6 +1,7 @@
 package com.zy.machine.device;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -48,6 +49,7 @@ public class YiNuoMachine extends MachineManage {
         this.listener = listener;
         if(sellManager.openSerialPort(devicesPort,baudRate)){
             flag = true;
+            receiveThread();
             if (listener != null) listener.onConnect();
         }else {
             if (listener != null) listener.onError(1000,"串口"+devicesPort+" 打开失败");
@@ -56,6 +58,7 @@ public class YiNuoMachine extends MachineManage {
 
     public void closeDevice() {
         flag = false;
+        isOutGoodsFlag = false;
         if (receiveThread != null)
             receiveThread = null;
         sellManager.closeSerialPort();
@@ -63,35 +66,44 @@ public class YiNuoMachine extends MachineManage {
             listener.onDisConnect();
     }
 
+    private boolean isOutGoodsFlag = false;//出货标志
+
     public void outGoods(){
         if (flag){
-            receiveThread();
+            isOutGoodsFlag = true;
         }else {
             if (listener != null) listener.onError(1000,"控制机头未连接");
         }
     }
 
-
     /**
      * 接收数据线程
      */
     private void receiveThread(){
+        if(receiveThread != null){
+            return;
+        }
         receiveThread = new Thread(){
             @Override
             public void run() {
+                while (flag){
+                    if (isOutGoodsFlag){
+                        sellManager.sendSell(1, 1, new SellManager.OnSellState() {
+                            @Override
+                            public void OnRead(boolean state) {
+                                if(state){
+                                    //开始出货
+                                    checkState();
+                                }else {
+                                    listener.onError(1006,"出袋失败");
+                                }
+                            }
+                        },300);//发送出货后 300毫秒后去检测状态
 
-                sellManager.sendSell(1, 1, new SellManager.OnSellState() {
-                    @Override
-                    public void OnRead(boolean state) {
-                        if(state){
-                            //开始出货
-                            checkState();
-                        }else {
-                            listener.onError(1006,"出袋失败");
-                        }
+                        isOutGoodsFlag = false;
                     }
-                },300);//发送出货后 300毫秒后去检测状态
-
+                    SystemClock.sleep(1000);
+                }
             }
         };
         //启动接收线程
