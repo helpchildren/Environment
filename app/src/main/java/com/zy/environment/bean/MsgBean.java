@@ -2,6 +2,7 @@ package com.zy.environment.bean;
 
 import com.zy.environment.config.GlobalSetting;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MsgBean {
@@ -83,7 +84,7 @@ public class MsgBean {
     }
 
     public List<AdvBean> getAdv() {
-        return adv;
+        return adv==null?new ArrayList<>():adv;
     }
 
     public void setAdv(List<AdvBean> adv) {

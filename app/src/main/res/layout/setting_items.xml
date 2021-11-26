@@ -57,14 +57,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:text="易诺" />
+                    android:text="益诺" />
 
                 <RadioButton
                     android:id="@+id/btnDQ"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:text="鼎旗" />
+                    android:text="鼎戟" />
 
             </RadioGroup>
 

@@ -53,12 +53,12 @@ public class DialogUtils {
         }
         if (!errDialog.isShowing()) {
             errDialog.message(msg);
-            errDialog.show();
+            errDialog.showDialog();
         }
     }
 
     public void closeErrDialog() {
-        if(errDialog != null || errDialog.isShowing()){
+        if(errDialog != null && errDialog.isShowing()){
             errDialog.dismiss();// 创建自定义样式dialog
         }
     }

@@ -2,11 +2,10 @@ package com.zy.environment;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,6 +21,10 @@ import com.lake.banner.ImageGravityType;
 import com.lake.banner.Transformer;
 import com.lake.banner.VideoGravityType;
 import com.lake.banner.loader.ViewItemBean;
+import com.sesxh.appupdata.UpdataController;
+import com.sesxh.appupdata.UpdateInfoService;
+import com.sesxh.appupdata.bean.UpdateInfo;
+import com.sesxh.appupdata.callback.UpdataCallback;
 import com.sesxh.okwebsocket.OkWebSocket;
 import com.sesxh.okwebsocket.WebSocketInfo;
 import com.sesxh.okwebsocket.annotation.WebSocketStatus;
@@ -63,10 +66,10 @@ import static com.lake.banner.BannerConfig.VIDEO;
 public class MainActivity extends BaseActivity {
 
     private static final String TAG="MainActivity";
-    private Activity context;
 
     private ImageView ivScanCode;
     private TextView tvDeviceid;
+    private TextView tvVersion;
 
     private final Gson gson = new Gson();
     private Handler mHandler = new Handler();
@@ -80,7 +83,6 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        context = this;
         initPermission();//权限申请
         findViewById();
         initView();
@@ -110,8 +112,10 @@ public class MainActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         mAdvStop = true;
+        OkWebSocket.closeAllNow();
         if (machineManage != null)
             machineManage.closeDevice();
+        banner.releaseBanner();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -123,8 +127,10 @@ public class MainActivity extends BaseActivity {
         initData();//刷新连接
     }
 
+    @SuppressLint("SetTextI18n")
     private void initView() {
-        GlobalSetting.deviceid = ToolsUtils.getDeviceId(context);
+        GlobalSetting.deviceid = ToolsUtils.getDeviceId(activity);
+        tvVersion.setText("版本号：v" + ToolsUtils.getVersionName(activity));
         tvDeviceid.setText("设备号："+ GlobalSetting.deviceid);
         tvDeviceid.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -156,14 +162,17 @@ public class MainActivity extends BaseActivity {
             mAdvList = new ArrayList<>();
         }
         updateAdv();
+        //获取版本更新信息
+        getAppUpDataInfo();
     }
 
     private void initData() {
-        GlobalSetting.getSetting(context);
+        GlobalSetting.getSetting(activity);
         websocketConnect();
         //获取硬件控制
-        machineManage = MachineFactroy.init(GlobalSetting.machineType, context);
+        machineManage = MachineFactroy.init(GlobalSetting.machineType, activity);
         machineManage.setOutLength(GlobalSetting.outLen);
+        machineManage.setDevicesPort(GlobalSetting.serialPort);
         machineManage.openDevice(mListener);
     }
 
@@ -182,7 +191,7 @@ public class MainActivity extends BaseActivity {
     private void getAdv(){
         mAdvStop = false;
         //定时获取广告信息 5分钟一次
-        Flowable.interval(2, 5, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
+        Flowable.interval(1, 5, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
             Logger.i(TAG,"定时任务 拉取广告："+aLong);
             MsgBean msgBean = new MsgBean("qrcode");
             socketSend(msgBean);
@@ -298,7 +307,7 @@ public class MainActivity extends BaseActivity {
                         socketSend(msgBean);
                     }
                     if (errcode == 1000 || errcode == 1001 || errcode == 1003){
-                        showText(err, true);
+                        showText(err+",请联系管理员。", true);
                     }else {
                         showText(err);
                     }
@@ -409,8 +418,6 @@ public class MainActivity extends BaseActivity {
         });
     }
 
-
-
     /*
     * 更新广告
     * */
@@ -431,6 +438,7 @@ public class MainActivity extends BaseActivity {
             banner.update(bannerList);
             banner.setVisibility(View.VISIBLE);
         }else {
+            banner.onPause();
             banner.setVisibility(View.GONE);
         }
     }
@@ -439,7 +447,7 @@ public class MainActivity extends BaseActivity {
     * 更新二维码
     * */
     private void updateQRcode(String qrcode){
-        Glide.with(context)
+        Glide.with(activity)
                 .load(qrcode)
                 .placeholder(R.drawable.qrcode_bg)
                 .error(R.drawable.qrcode_bg)
@@ -447,6 +455,30 @@ public class MainActivity extends BaseActivity {
                 .into(ivScanCode);
     }
 
+    /*
+    * 获取apk更新
+    * */
+    private void getAppUpDataInfo() {
+        UpdataController.getUpDataInfo(activity, new UpdataCallback() {
+            @Override
+            public void onUpdate(boolean isNeed, UpdateInfo info) {
+                Log.e("lfntest", "获取更新信息成功：" + info.toString());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isNeed){//判断是否需要更新
+                            UpdateInfoService.getInstance().downLoadFile(info.getApkurl());//前台下载
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String msg) {
+                Log.e("lfntest", "获取更新失败：" + msg);
+            }
+        });
+    }
 
     private void showText(String msg){
         showText(msg, false);
@@ -468,6 +500,7 @@ public class MainActivity extends BaseActivity {
     private void findViewById() {
         ivScanCode = (ImageView) findViewById(R.id.iv_scan_code);
         tvDeviceid = (TextView) findViewById(R.id.tv_deviceid);
+        tvVersion = (TextView) findViewById(R.id.tv_version);
         banner = (HBanner) findViewById(R.id.banner);
     }
 

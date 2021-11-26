@@ -16,7 +16,7 @@ public class GlobalSetting {
     public static String deviceid;//设备id
     public static String serialPort = "dev/ttyS0";//设备id
     public static int outLen= 9;//出货长度
-    public static int machineType = MachineType.YN.getCode();//机头类型 0：易诺 1：鼎旗
+    public static int machineType = MachineType.YN.getCode();//机头类型 0：益诺 1：鼎戟
 
     public static void getSetting(Context context){
         SpStorage mSp = new SpStorage(context, "zy-environment");
@@ -40,8 +40,8 @@ public class GlobalSetting {
      * 机头型号
      * */
     public enum MachineType{
-        YN(0, "易诺"),
-        DQ(1,"鼎旗");
+        YN(0, "益诺"),
+        DQ(1,"鼎戟");
 
         int code;
         String type;

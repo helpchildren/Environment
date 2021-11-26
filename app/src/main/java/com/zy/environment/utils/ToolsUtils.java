@@ -2,6 +2,8 @@ package com.zy.environment.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -14,6 +16,32 @@ import java.util.List;
 
 public class ToolsUtils {
 
+    //版本名
+    public static String getVersionName(Context context) {
+        return getPackageInfo(context).versionName;
+    }
+
+    //版本号
+    public static int getVersionCode(Context context) {
+        return getPackageInfo(context).versionCode;
+
+    }
+
+    private static PackageInfo getPackageInfo(Context context) {
+        PackageInfo pi = null;
+
+        try {
+            PackageManager pm = context.getPackageManager();
+            pi = pm.getPackageInfo(context.getPackageName(),
+                    PackageManager.GET_CONFIGURATIONS);
+
+            return pi;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return pi;
+    }
 
     /*
     * 获取设备id
@@ -72,19 +100,18 @@ public class ToolsUtils {
             return true;
         }
         // 两个list都为空（包括空指针、元素个数为0）
-        if ((list1 == null && list2 != null && list2.size() == 0)
-                || (list2 == null && list1 != null && list1.size() == 0)) {
+        if (list1 == null && list2.size() == 0 || list2 == null && list1.size() == 0) {
             return true;
         }
-        // 两个list元素个数不相同
-        if (list1.size() != list2.size()) {
-            return false;
-        }
-        // 两个list元素个数已经相同，再比较两者内容
-        // 采用这种可以忽略list中的元素的顺序
-        // 涉及到对象的比较是否相同时，确保实现了equals()方法
-        if (!list1.containsAll(list2)) {
-            return false;
+        if (list1 != null && list2 != null){
+            // 两个list元素个数不相同
+            if (list1.size() != list2.size()) {
+                return false;
+            }
+            // 两个list元素个数已经相同，再比较两者内容
+            // 采用这种可以忽略list中的元素的顺序
+            // 涉及到对象的比较是否相同时，确保实现了equals()方法
+            return list1.containsAll(list2);
         }
         return true;
     }

@@ -10,8 +10,8 @@ android {
         applicationId "com.zy.environment"
         minSdkVersion 22
         targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -59,4 +59,5 @@ dependencies {
     implementation 'com.github.helpchildren:RxPermissDemo:v1.0.0'
     implementation project(path: ':okwebsocket')
     implementation project(path: ':machine')
+    implementation project(path: ':appupdata')
 }

@@ -10,9 +10,9 @@ public class MachineFactroy {
     public static MachineManage init(int type, Context context) {
         MachineManage manage;
         if (type == 0){
-            manage = new YiNuoMachine(context);//易诺
+            manage = new YiNuoMachine(context);//益诺
         }else {
-            manage = new SQ800Machine();//鼎旗
+            manage = new SQ800Machine();//鼎戟
         }
         return manage;
     }

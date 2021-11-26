@@ -4,8 +4,6 @@
     <!--//拍照时使用的路径-->
     <external-path name="my_images"  path="images/" />
 
-    <external-path path="." name="zy_hbd" />
-
-    <files-path name="shared" path="shared/"/>
+    <external-path path="." name="ccb_xls" />
 </paths>
 
