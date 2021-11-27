@@ -116,7 +116,7 @@ public class MainActivity extends BaseActivity {
         OkWebSocket.closeAllNow();
         if (machineManage != null)
             machineManage.closeDevice();
-        banner.releaseBanner();
+        DialogUtils.getInstance().releaseDialog();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

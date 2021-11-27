@@ -63,4 +63,15 @@ public class DialogUtils {
         }
     }
 
+    public void releaseDialog() {
+        if (loadingDialog !=null){
+            loadingDialog.dismiss();
+            loadingDialog = null;
+        }
+        if (errDialog !=null){
+            errDialog.dismiss();
+            errDialog = null;
+        }
+    }
+
 }
