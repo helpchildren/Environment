@@ -1,3 +1,4 @@
+include ':hbanner'
 include ':appupdata'
 include ':machine'
 include ':okwebsocket'
