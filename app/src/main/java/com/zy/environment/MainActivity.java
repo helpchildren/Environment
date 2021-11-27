@@ -448,8 +448,8 @@ public class MainActivity extends BaseActivity {
     private void updateQRcode(String qrcode){
         Glide.with(activity)
                 .load(qrcode)
-                .placeholder(R.drawable.qrcode_bg)
-                .error(R.drawable.qrcode_bg)
+//                .placeholder(R.drawable.qrcode_bg)
+//                .error(R.drawable.qrcode_bg)
                 .centerCrop()
                 .into(ivScanCode);
     }

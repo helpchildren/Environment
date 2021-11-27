@@ -2,10 +2,7 @@ package com.zy.machine.device;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.util.Log;
-import android.widget.Toast;
 
-import com.dingee.tcmsdk.TicketModule;
 import com.example.selllibrary.SellManager;
 import com.zy.machine.MachineManage;
 import com.zy.machine.OnDataListener;
@@ -91,15 +88,10 @@ public class YiNuoMachine extends MachineManage {
                         sellManager.sendSell(1, 1, new SellManager.OnSellState() {
                             @Override
                             public void OnRead(boolean state) {
-                                if(state){
-                                    //开始出货
-                                    checkState();
-                                }else {
-                                    listener.onError(1006,"出袋失败");
-                                }
+
                             }
                         },300);//发送出货后 300毫秒后去检测状态
-
+                        checkState();
                         isOutGoodsFlag = false;
                     }
                     SystemClock.sleep(1000);
@@ -115,12 +107,10 @@ public class YiNuoMachine extends MachineManage {
         sellManager.checkState(500, Timeout, System.currentTimeMillis(),3000, new SellManager.OnCheckState() {
             @Override
             public void OnFree() {
-                Log.i(TAG,"checkState：空闲中");
             }
 
             @Override
             public void OnOpening() {
-                Log.i(TAG,"checkState：正在出货");
             }
 
             @Override

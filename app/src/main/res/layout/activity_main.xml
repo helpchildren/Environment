@@ -26,8 +26,7 @@
             android:id="@+id/iv_scan_code"
             android:layout_width="200dp"
             android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/qrcode_bg" />
+            android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/tv_deviceid"
