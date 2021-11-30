@@ -57,6 +57,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
+import io.reactivex.Observer;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
 import static com.lake.banner.BannerConfig.IMAGE;
@@ -72,7 +75,6 @@ public class MainActivity extends BaseActivity {
     private TextView tvVersion;
 
     private final Gson gson = new Gson();
-    private Handler mHandler = new Handler();
     private MachineManage machineManage;//硬件连接
     private String order_sn = "";
     public boolean mAdvStop = false;//定时任务停止标记
@@ -192,7 +194,7 @@ public class MainActivity extends BaseActivity {
     private void getAdv(){
         mAdvStop = false;
         //定时获取广告信息 5分钟一次
-        Flowable.interval(1, 5, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
+        Flowable.interval(1, 3, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
             Logger.i(TAG,"定时任务 拉取广告："+aLong);
             MsgBean msgBean = new MsgBean("qrcode");
             socketSend(msgBean);
@@ -200,13 +202,30 @@ public class MainActivity extends BaseActivity {
     }
 
     private void socketSend(MsgBean msgBean){
-        Logger.d(TAG, "客户端发送消息：" + gson.toJson(msgBean));
-        OkWebSocket.send(GlobalSetting.wsurl, gson.toJson(msgBean)).subscribe();
+        if (isSocketConn){
+            Logger.d(TAG, "客户端发送消息：" + gson.toJson(msgBean));
+            OkWebSocket.send(GlobalSetting.wsurl, gson.toJson(msgBean)).subscribe(new Observer<Boolean>() {
+                @Override
+                public void onSubscribe(@NonNull Disposable d) { }
+
+                @Override
+                public void onNext(@NonNull Boolean aBoolean) { }
+
+                @Override
+                public void onError(@NonNull Throwable e) { }
+
+                @Override
+                public void onComplete() { }
+            });
+        }else {
+            Logger.d(TAG, "客户端发送消息失败：socket断开");
+        }
     }
 
     /*
      * 连接服务器
      * */
+    private boolean isSocketConn = false;
     @SuppressLint("CheckResult")
     private void websocketConnect() {
         OkWebSocket.get(GlobalSetting.wsurl).subscribe(new Consumer<WebSocketInfo>() {
@@ -215,20 +234,19 @@ public class MainActivity extends BaseActivity {
                 Logger.d(TAG, "客户端收到消息：" + webSocketInfo.toString());
                 switch(webSocketInfo.getStatus()){
                     case WebSocketStatus.STATUS_CONNECTED://连接成功
+                    case WebSocketStatus.STATUS_RE_CONNECTED://重连成功
+                        isSocketConn = true;
                         DialogUtils.getInstance().closeErrDialog();
                         deviceLogin();
                         getAdv();
                         showText("服务器连接成功");
                         break;
-                     case WebSocketStatus.STATUS_ON_CLOSED://断开连接
+                    case WebSocketStatus.STATUS_ON_CLOSED://关闭
+                        isSocketConn = false;
                         break;
                     case WebSocketStatus.STATUS_ON_FAILURE://连接异常
+                        isSocketConn = false;
                         showText("服务器连接失败，等待重连中...", true);
-                        mHandler.postDelayed(new Runnable() {
-                            public void run() {
-                                websocketConnect(); //重连socket
-                            }
-                        }, 10*1000);
                         break;
                     case WebSocketStatus.STATUS_ON_REPLY://收到服务端消息
                         Type listType = new TypeToken<MsgBean>() {}.getType();

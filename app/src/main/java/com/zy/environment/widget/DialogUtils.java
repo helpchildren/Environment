@@ -53,7 +53,7 @@ public class DialogUtils {
         }
         if (!errDialog.isShowing()) {
             errDialog.message(msg);
-            errDialog.showDialog();
+            errDialog.show();
         }
     }
 

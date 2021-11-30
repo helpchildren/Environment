@@ -36,7 +36,8 @@ public class BaseApplication extends Application {
         //websocket初始化
         OkWebSocket.init(new Config.Builder(getApplicationContext())
                 .debug(false)
-                .pingInterval(120, TimeUnit.SECONDS)
+                .pingInterval(10, TimeUnit.SECONDS)
+                .reconnectInterval(10, TimeUnit.SECONDS)
                 .build());
     }
 

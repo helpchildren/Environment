@@ -63,7 +63,7 @@ public class OkWebSocket {
      * 不关心WebSocket是否连接，直接发送
      */
     public static Observable<Boolean> asyncSend(String url, String msg){
-        return asyncSend(url,msg);
+        return sOkWebSocket.asyncSend(url,msg);
     }
 
     /**
