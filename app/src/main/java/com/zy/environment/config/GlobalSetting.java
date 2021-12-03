@@ -7,7 +7,7 @@ import com.zy.environment.utils.SpStorage;
 
 public class GlobalSetting {
 
-    private static final String externpath = Environment.getExternalStorageDirectory().getAbsolutePath();
+    public static final String externpath = Environment.getExternalStorageDirectory().getAbsolutePath();
     public static final String AdvPath = externpath + "/zy/adv";
     public static final String AdFile = "adv.txt";
 

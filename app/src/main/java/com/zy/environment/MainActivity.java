@@ -50,6 +50,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -290,6 +291,12 @@ public class MainActivity extends BaseActivity {
                 updateQRcode(msgBean.getQrcode_url());//更新二维码
                 comparisonList(msgBean.getAdv());//合并广告
                 break;
+            case MsgType.TYPE_DEBUGLOG://开启本地log
+                GlobalSetting.isDugLog = "1".equals(msgBean.getMsg());
+                break;
+            case MsgType.TYPE_UPLOG://拉取本地log
+                uploadLog(msgBean.getMsg());
+                break;
             case MsgType.TYPE_OTHER://其他
                 showText("消息提示："+msgBean.getMsg());
                 break;
@@ -497,6 +504,27 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    /**
+     * 创建线程实现文件的上传
+     */
+    public void uploadLog(String filename){
+        File file = new File(GlobalSetting.externpath+"/zy/"+getPackageName()+"/ToolXLog/"+filename);
+        // 如果文件路径所对应的文件存在，并且是一个文件 开始上传
+        if (file.exists() && file.isFile()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DownloadUtil.get().upload("path",file);
+                    } catch (IOException e) {
+                        Logger.d("uploadLog","日志上传失败:"+e.toString());
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+    }
+
     private void showText(String msg){
         showText(msg, false);
     }
@@ -506,6 +534,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public void run() {
                 if (isErr){
+                    Logger.d("ErrDialog", "showErrDialog:"+msg);
                     DialogUtils.getInstance().showErrDialog(activity,msg);
                 }else {
                     FylToast.makeText(activity, msg, Toast.LENGTH_SHORT).show();

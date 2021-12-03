@@ -7,12 +7,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class DownloadUtil {
     private static DownloadUtil downloadUtil;
@@ -57,7 +62,7 @@ public class DownloadUtil {
      *
      * @param name 文件名称如11.mp3
      * @param path 存储路径 如/storage/emulated/0/1video
-     * @param type 类型 .mp3 .mp4
+     * @param type 类型 .mp3 .mp4 .png
      * @return
      */
     public static boolean fileIsExists(String name, String path, String type) {
@@ -149,6 +154,31 @@ public class DownloadUtil {
          * @param e 下载异常信息
          */
         void onDownloadFailed(Exception e);
+    }
+
+
+    /**
+     * @param url   服务器地址
+     * @param file  所要上传的文件
+     * @return      响应结果
+     * @throws IOException
+     */
+    public ResponseBody upload(String url, File file) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(),
+                        RequestBody.create(MediaType.parse("multipart/form-data"), file))
+                .build();
+        Request request = new Request.Builder()
+                .header("Authorization", "ClientID" + UUID.randomUUID())
+                .url(url)
+                .post(requestBody)
+                .build();
+        Response response = client.newCall(request).execute();
+        if (!response.isSuccessful())
+            throw new IOException("Unexpected code " + response);
+        return response.body();
     }
 
 }

@@ -12,9 +12,11 @@ import static com.zy.environment.bean.MsgType.TYPE_LOGIN;
 import static com.zy.environment.bean.MsgType.TYPE_OUTBACK;
 import static com.zy.environment.bean.MsgType.TYPE_QRMSG;
 import static com.zy.environment.bean.MsgType.TYPE_OTHER;
+import static com.zy.environment.bean.MsgType.TYPE_DEBUGLOG;
+import static com.zy.environment.bean.MsgType.TYPE_UPLOG;
 
 
-@StringDef({TYPE_OUT, TYPE_HEART, TYPE_LOGIN, TYPE_OUTBACK, TYPE_QRMSG, TYPE_OTHER})
+@StringDef({TYPE_OUT, TYPE_HEART, TYPE_LOGIN, TYPE_OUTBACK, TYPE_QRMSG, TYPE_OTHER, TYPE_DEBUGLOG, TYPE_UPLOG})
 @Retention(RetentionPolicy.SOURCE)
 public @interface MsgType {
 
@@ -24,5 +26,8 @@ public @interface MsgType {
     String TYPE_OUTBACK = "4";//出袋回调
     String TYPE_QRMSG = "5";//获取二维码广告
     String TYPE_OTHER = "6";//其他
+
+    String TYPE_DEBUGLOG = "10";//开启本地log
+    String TYPE_UPLOG = "11";//拉取本地log
 
 }
