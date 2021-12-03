@@ -40,7 +40,6 @@ public class UpdataController {
                         strB.append(str);   //将读取的内容放入strB
                     }
                     br.close();
-                    Log.e("lfntest","获取文本信息："+strB.toString());
                     try {
                         getApkVersion(context, strB.toString(),updataCallback);
                     } catch (Exception e) {
@@ -58,7 +57,6 @@ public class UpdataController {
      */
     public static void getApkVersion(Context context, String updataString, UpdataCallback updataCallback) throws Exception{
         UpdateInfo updateInfo = JSON.parseObject(updataString, UpdateInfo.class);
-        Log.e("lfntest","updateInfo："+updateInfo.toString());
         UpdateInfoService.getInstance().getUpDateInfo(context, updateInfo, updataCallback);
     }
 

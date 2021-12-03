@@ -5,7 +5,6 @@ import android.app.Application;
 
 import com.sesxh.okwebsocket.OkWebSocket;
 import com.sesxh.okwebsocket.config.Config;
-import com.sesxh.yzsspeech.YSpeech;
 import com.zy.environment.utils.log.CrashHandler;
 import com.zy.environment.utils.log.XLogUtils;
 
@@ -31,8 +30,6 @@ public class BaseApplication extends Application {
         CrashHandler.getInstance(getApplicationContext())
                 .setFoldername("zy/"+getPackageName()+"/ToolCrash")
                 .init();
-        //语音初始化
-        YSpeech.getInstance().initSpeech(getApplicationContext());
         //websocket初始化
         OkWebSocket.init(new Config.Builder(getApplicationContext())
                 .debug(false)

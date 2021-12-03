@@ -4,8 +4,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,7 +27,6 @@ import com.sesxh.okwebsocket.OkWebSocket;
 import com.sesxh.okwebsocket.WebSocketInfo;
 import com.sesxh.okwebsocket.annotation.WebSocketStatus;
 import com.sesxh.rxpermissions.RxPermissions;
-import com.sesxh.yzsspeech.YSpeech;
 import com.zy.environment.base.BaseActivity;
 import com.zy.environment.bean.AdvBean;
 import com.zy.environment.bean.MsgBean;
@@ -272,7 +269,6 @@ public class MainActivity extends BaseActivity {
     private void cmdHandle(MsgBean msgBean){
         switch(msgBean.getType()){
             case MsgType.TYPE_OUT://出货
-                YSpeech.getInstance().toSpeech("正在出货，请稍后");
                 order_sn = msgBean.getOrder_sn();
                 //调用硬件部分
                 machineManage.outGoods();

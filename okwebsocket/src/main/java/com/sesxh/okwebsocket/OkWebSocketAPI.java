@@ -11,7 +11,6 @@ import com.sesxh.okwebsocket.log.Logger;
 import com.sesxh.okwebsocket.ssl.OkX509TrustManager;
 import com.sesxh.okwebsocket.ssl.SSLManager;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -36,7 +36,6 @@ import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.schedulers.Timed;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -448,11 +447,11 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
                         super.onFailure(webSocket, throwable, response);
                         isReconnecting = true;
                         mWebSocket = null;
-                        Logger.d(TAG,"连接失败");
+                        Logger.d(TAG,"websocket连接失败:"+throwable.getMessage());
                         //移除WebSocket缓存，retry重试重新连接
                         removeWebSocketCache(webSocket);
                         if (!emitter.isDisposed()) {
-                            emitter.onNext(createPrepareReconnect(mWebSocketUrl));
+                            emitter.onNext(createPrepareReconnect(mWebSocketUrl, throwable.getMessage()));
                             //失败发送onError，让retry操作符重试
                             emitter.onError(throwable);
                         }
@@ -476,9 +475,10 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
                 .setReconnect(true);
     }
 
-    private WebSocketInfo createPrepareReconnect(String url) {
+    private WebSocketInfo createPrepareReconnect(String url, String Errmsg) {
         return mWebSocketInfoPool.obtain(url)
                 .setPrepareReconnect(true)
+                .setStringMsg(Errmsg)
                 .setStatus(WebSocketStatus.STATUS_ON_FAILURE);
     }
 

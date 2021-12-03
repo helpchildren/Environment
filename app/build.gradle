@@ -55,7 +55,6 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.2.0'
 //    implementation 'com.lakehubo:hbanner:1.0.8'
 
-    implementation 'com.github.helpchildren:YzsSpeech:v1.0.2'
     implementation 'com.github.helpchildren:RxPermissDemo:v1.0.0'
     implementation project(path: ':okwebsocket')
     implementation project(path: ':machine')
