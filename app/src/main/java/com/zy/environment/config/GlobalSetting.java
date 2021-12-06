@@ -19,7 +19,7 @@ public class GlobalSetting {
     public static int outLen= 9;//出货长度
     public static int machineType = MachineType.YN.getCode();//机头类型 0：益诺 1：鼎戟
 
-    public static boolean isDugLog = false;//是否开启文件日志
+    public static boolean isDugLog = true;//是否开启文件日志
 
 
     public static void getSetting(Context context){
