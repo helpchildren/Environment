@@ -35,6 +35,7 @@ import com.zy.environment.config.GlobalSetting;
 import com.zy.environment.utils.DownloadUtil;
 import com.zy.environment.utils.FileStorage;
 import com.zy.environment.utils.FylToast;
+import com.zy.environment.utils.SpStorage;
 import com.zy.environment.utils.ToolsUtils;
 import com.zy.environment.utils.Validate;
 import com.zy.environment.utils.log.Logger;
@@ -191,8 +192,8 @@ public class MainActivity extends BaseActivity {
     @SuppressLint("CheckResult")
     private void getAdv(){
         mAdvStop = false;
-        //定时获取广告信息 5分钟一次
-        Flowable.interval(1, 3, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
+        //定时获取广告信息5分钟一次
+        Flowable.interval(1, 5, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
             Logger.i(TAG,"定时任务 拉取广告："+aLong);
             MsgBean msgBean = new MsgBean("qrcode");
             socketSend(msgBean);
@@ -289,6 +290,9 @@ public class MainActivity extends BaseActivity {
                 break;
             case MsgType.TYPE_DEBUGLOG://开启本地log
                 GlobalSetting.isDugLog = "1".equals(msgBean.getMsg());
+                SpStorage mSp = new SpStorage(activity, "zy-environment");
+                mSp.put("isDugLog", GlobalSetting.isDugLog);
+                mSp.apply();
                 break;
             case MsgType.TYPE_UPLOG://拉取本地log
                 uploadLog(msgBean.getMsg());
@@ -367,8 +371,6 @@ public class MainActivity extends BaseActivity {
             }
             //重新赋值
             mAdvList = new ArrayList<>(advList);
-            Logger.e("lfntest","重新赋值 mAdvList："+ Arrays.toString(mAdvList.toArray()));
-
             //统计新增得广告并下载
             List<AdvBean> downAdvList = new ArrayList<>();//广告临时表
             for (int i = 0; i < mAdvList.size(); i++) {
@@ -389,12 +391,13 @@ public class MainActivity extends BaseActivity {
                 downCount = 0;
                 for (int i = 0; i < downAdvList.size(); i++) {
                     AdvBean advBean = downAdvList.get(i);
+                    Logger.d(TAG, "准备下载:"+advBean.getId()+" "+downCount);
                     //文件不存在则下载
                     DownloadUtil.get().download(advBean.getUrl(), GlobalSetting.AdvPath, advBean.getDirName(), new DownloadUtil.OnDownloadListener() {
                         @Override
                         public void onDownloadSuccess(File file, String fileName) {
                             downCount++;
-                            Logger.e(TAG, "下载成功:"+fileName+" "+downCount);
+                            Logger.d(TAG, "下载成功:"+fileName+" "+downCount);
                             if (downCount == downAdvList.size()){
                                 composeList();
                             }
@@ -409,7 +412,7 @@ public class MainActivity extends BaseActivity {
                         public void onDownloadFailed(Exception e) {
                             e.printStackTrace();
                             downCount++;
-                            Logger.e(TAG, "下载失败:"+e.getMessage()+" "+downCount);
+                            Logger.d(TAG, "下载失败:"+e.getMessage()+" "+downCount);
                             if (downCount == downAdvList.size()){
                                 composeList();
                             }
@@ -511,9 +514,9 @@ public class MainActivity extends BaseActivity {
                 @Override
                 public void run() {
                     try {
-                        DownloadUtil.get().upload("path",file);
+                        DownloadUtil.get().upload(GlobalSetting.uploadUrl, file);
                     } catch (IOException e) {
-                        Logger.d("uploadLog","日志上传失败:"+e.toString());
+                        Logger.d("uploadLog","日志上传失败"+e.toString());
                         e.printStackTrace();
                     }
                 }

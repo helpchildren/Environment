@@ -1,6 +1,6 @@
 package com.zy.environment.utils;
 
-import com.zy.environment.utils.log.Logger;
+import com.zy.environment.config.GlobalSetting;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,6 +45,9 @@ public class DownloadUtil {
     public static ArrayList<String> getFileName(String fileAbsolutePaht, String type) {
         ArrayList<String> result = new ArrayList<String>();
         File file = new File(fileAbsolutePaht);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
         File[] files = file.listFiles();
         for (int i = 0; i < files.length; ++i) {
             if (!files[i].isDirectory()) {
@@ -167,6 +170,7 @@ public class DownloadUtil {
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
+                .addFormDataPart("device_id", GlobalSetting.deviceid)
                 .addFormDataPart("file", file.getName(),
                         RequestBody.create(MediaType.parse("multipart/form-data"), file))
                 .build();

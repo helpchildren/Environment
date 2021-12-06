@@ -12,6 +12,7 @@ public class GlobalSetting {
     public static final String AdFile = "adv.txt";
 
     public static String wsurl = "ws://47.93.97.68:2348";//服务器地址
+    public static String uploadUrl = "http://bag.cnwinall.cn/wechat/device/upload";//日志上传地址
 
     public static String deviceid;//设备id
     public static String serialPort = "dev/ttyS0";//设备id
