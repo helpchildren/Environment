@@ -17,7 +17,7 @@ public class GlobalSetting {
     public static String deviceid;//设备id
     public static String serialPort = "dev/ttyS0";//设备id
     public static int outLen= 9;//出货长度
-    public static int machineType = MachineType.YN.getCode();//机头类型 0：益诺 1：鼎戟
+    public static int machineType = MachineType.DQ.getCode();//机头类型 0：益诺 1：鼎戟
 
     public static boolean isDugLog = true;//是否开启文件日志
 
@@ -28,7 +28,7 @@ public class GlobalSetting {
         serialPort = (String) mSp.getSharedPreference("serialPort", serialPort);
         outLen = (Integer) mSp.getSharedPreference("outLen", outLen);
         machineType = (Integer) mSp.getSharedPreference("machineType", machineType);
-        isDugLog = (Boolean) mSp.getSharedPreference("isDugLog", isDugLog);
+//        isDugLog = (Boolean) mSp.getSharedPreference("isDugLog", isDugLog);
         putSetting(context);
     }
 
@@ -38,7 +38,7 @@ public class GlobalSetting {
         mSp.put("serialPort", serialPort);
         mSp.put("outLen", outLen);
         mSp.put("machineType", machineType);
-        mSp.put("isDugLog", isDugLog);
+//        mSp.put("isDugLog", isDugLog);
         mSp.apply();
     }
 

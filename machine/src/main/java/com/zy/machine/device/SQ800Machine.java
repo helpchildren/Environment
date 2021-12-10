@@ -89,7 +89,7 @@ public class SQ800Machine extends MachineManage {
             public void run() {
                 while (flag){
                     if (isOutGoodsFlag){
-                        int ret = obj_tcm.dgCutTicket(fd, iCurDevAddr,TicketModule.TICKET_OUT_CAL_INCH ,outLength,9 );
+                        int ret = obj_tcm.dgCutTicket(fd, iCurDevAddr,TicketModule.TICKET_OUT_CAL_INCH ,outLength,9);
                         switch(ret) {
                             case TicketModule.RSLT_OUT_TICKET_SUCC:
                                 listener.onSuccess();
@@ -101,15 +101,26 @@ public class SQ800Machine extends MachineManage {
                                 listener.onError(1002,"出袋失败:出袋口有袋未取走");
                                 break;
                             case TicketModule.RSLT_OUT_TICKET_KNIFE_ERR:
+                                if(reset == 0){
+                                    resetCMD(1);
+                                    reset++;
+                                    continue;
+                                }
                                 listener.onError(1003,"出袋失败:切刀故障");
                                 break;
                             case TicketModule.RSLT_OUT_TICKET_PAPERJAM:
+                                if(reset == 0){
+                                    resetCMD(0);
+                                    reset++;
+                                    continue;
+                                }
                                 listener.onError(1004,"出袋失败:发生卡袋");
                                 break;
                             default:
                                 listener.onError(1005,"出袋失败:通讯错误");
                                 break;
                         }
+                        reset = 0;//成功返回 重置恢复标志
                         isOutGoodsFlag = false;
                     }
                     SystemClock.sleep(1000);
@@ -121,6 +132,18 @@ public class SQ800Machine extends MachineManage {
     }
 
 
-
+    /*
+    * 恢复指令
+    * 0：恢复卡袋
+    * 1：恢复切刀
+    * */
+    private int reset = 0;//恢复标志
+    private void resetCMD(int type){
+        if (type == 0){
+            obj_tcm.dgResetPaperJam(fd, iCurDevAddr);
+        }else {
+            obj_tcm.dgResetKnife(fd, iCurDevAddr);
+        }
+    }
 
 }

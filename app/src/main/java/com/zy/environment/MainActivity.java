@@ -164,8 +164,6 @@ public class MainActivity extends BaseActivity {
             mAdvList = new ArrayList<>();
         }
         updateAdv();
-        //获取版本更新信息
-        getAppUpDataInfo();
     }
 
     private void initData() {
@@ -280,6 +278,8 @@ public class MainActivity extends BaseActivity {
                 break;
             case MsgType.TYPE_LOGIN://登录
                 updateQRcode(msgBean.getQrcode_url());
+                //获取版本更新信息
+                getAppUpDataInfo();
                 break;
             case MsgType.TYPE_OUTBACK://出货回调
 
@@ -290,9 +290,6 @@ public class MainActivity extends BaseActivity {
                 break;
             case MsgType.TYPE_DEBUGLOG://开启本地log
                 GlobalSetting.isDugLog = "1".equals(msgBean.getMsg());
-                SpStorage mSp = new SpStorage(activity, "zy-environment");
-                mSp.put("isDugLog", GlobalSetting.isDugLog);
-                mSp.apply();
                 break;
             case MsgType.TYPE_UPLOG://拉取本地log
                 uploadLog(msgBean.getMsg());
@@ -486,14 +483,14 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onUpdate(boolean isNeed, UpdateInfo info) {
                 Logger.d("lfntest", "获取更新信息成功：" + info.toString());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isNeed){//判断是否需要更新
+                if (isNeed){//判断是否需要更新
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
                             UpdateInfoService.getInstance().downLoadFile(info.getApkurl());//前台下载
                         }
-                    }
-                });
+                    });
+                }
             }
 
             @Override

@@ -35,6 +35,7 @@
         android:orientation="vertical">
 
         <Switch
+            android:visibility="gone"
             android:id="@+id/s_Log"
             style="@style/settingtextview"
             android:layout_width="match_parent"
