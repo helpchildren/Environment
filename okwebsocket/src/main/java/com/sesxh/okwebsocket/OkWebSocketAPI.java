@@ -61,6 +61,10 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
      */
     private OkHttpClient mClient;
     /**
+     * 是否需要重连
+     */
+    private boolean mIsAutoReconnect;
+    /**
      * 重连间隔时间
      */
     private long mReconnectInterval;
@@ -90,8 +94,11 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
         }
         Logger.sDebug=config.isDebug();
         //重试时间配置
-        this.mReconnectInterval = config.getReconnectInterval();
-        this.mReconnectIntervalTimeUnit = config.getReconnectIntervalTimeUnit();
+        this.mIsAutoReconnect=config.isAutoReconnect();
+        if(mIsAutoReconnect) {
+            this.mReconnectInterval = config.getReconnectInterval();
+            this.mReconnectIntervalTimeUnit = config.getReconnectIntervalTimeUnit();
+        }
         this.mObservableCacheMap = new HashMap<>(16);
         this.mWebSocketPool = new HashMap<>(16);
         mWebSocketInfoPool = new WebSocketInfoPool();
@@ -100,11 +107,6 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
     @Override
     public Observable<WebSocketInfo> get(String url) {
         return getWebSocketInfo(url);
-    }
-
-    @Override
-    public Observable<WebSocketInfo> get(String url, long timeout, TimeUnit timeUnit) {
-        return getWebSocketInfo(url, timeout, timeUnit);
     }
 
     @Override
@@ -323,11 +325,7 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
                 });
     }
 
-    public Observable<WebSocketInfo> getWebSocketInfo(String url) {
-        return getWebSocketInfo(url, 5, TimeUnit.SECONDS);
-    }
-
-    public synchronized Observable<WebSocketInfo> getWebSocketInfo(final String url, final long timeout, final TimeUnit timeUnit) {
+    public synchronized Observable<WebSocketInfo> getWebSocketInfo(final String url) {
         //先从缓存中取
         Observable<WebSocketInfo> observable = mObservableCacheMap.get(url);
         if (observable == null) {
@@ -379,11 +377,8 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
         public void subscribe(ObservableEmitter<WebSocketInfo> emitter) throws Exception {
             //因为retry重连不能设置延时，所以只能这里延时，降低发送频率
             if (mWebSocket == null && isReconnecting) {
-                if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
+                if (Looper.getMainLooper() != Looper.myLooper()) {
                     long millis = mReconnectIntervalTimeUnit.toMillis(mReconnectInterval);
-                    if (millis == 0) {
-                        millis = 1000;
-                    }
                     SystemClock.sleep(millis);
                 }
             }
@@ -445,15 +440,19 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
                     @Override
                     public void onFailure(WebSocket webSocket, Throwable throwable, Response response) {
                         super.onFailure(webSocket, throwable, response);
-                        isReconnecting = true;
                         mWebSocket = null;
-                        Logger.d(TAG,"websocket连接失败:"+throwable.getMessage());
+                        Logger.d(TAG,"连接失败");
                         //移除WebSocket缓存，retry重试重新连接
                         removeWebSocketCache(webSocket);
                         if (!emitter.isDisposed()) {
-                            emitter.onNext(createPrepareReconnect(mWebSocketUrl, throwable.getMessage()));
-                            //失败发送onError，让retry操作符重试
-                            emitter.onError(throwable);
+                            if(mIsAutoReconnect) {
+                                isReconnecting = true;
+                                emitter.onNext(createPrepareReconnect(mWebSocketUrl));
+                                //失败发送onError，让retry操作符重试
+                                emitter.onError(throwable);
+                            }else {
+                                emitter.onNext(createFailure(mWebSocketUrl));
+                            }
                         }
                     }
                 });
@@ -475,10 +474,15 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
                 .setReconnect(true);
     }
 
-    private WebSocketInfo createPrepareReconnect(String url, String Errmsg) {
+    private WebSocketInfo createPrepareReconnect(String url) {
         return mWebSocketInfoPool.obtain(url)
                 .setPrepareReconnect(true)
-                .setStringMsg(Errmsg)
+                .setStatus(WebSocketStatus.STATUS_ON_FAILURE);
+    }
+
+    private WebSocketInfo createFailure(String url) {
+        return mWebSocketInfoPool.obtain(url)
+                .setPrepareReconnect(false)
                 .setStatus(WebSocketStatus.STATUS_ON_FAILURE);
     }
 
@@ -521,10 +525,11 @@ public class OkWebSocketAPI implements IOkWebSocketAPI {
             sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new X509TrustManager[]{x509TrustManager}, new SecureRandom());
             mClient=new OkHttpClient.Builder()
-                    .readTimeout(config.getTimeoutInterval(), TimeUnit.SECONDS)//设置读取超时时间
-                    .writeTimeout(config.getTimeoutInterval(), TimeUnit.SECONDS)//设置写的超时时间
-                    .connectTimeout(config.getTimeoutInterval(), TimeUnit.SECONDS)//设置连接超时时间
+                    .readTimeout(config.getTimeoutInterval(), config.getTimeoutTimeUnit())//设置读取超时时间
+                    .writeTimeout(config.getTimeoutInterval(), config.getTimeoutTimeUnit())//设置写的超时时间
+                    .connectTimeout(config.getTimeoutInterval(), config.getTimeoutTimeUnit())//设置连接超时时间
                     .pingInterval(config.getPingInterval(),config.getPingIntervalTimeUnit())
+                    .socketFactory(config.getSocketFactory())
                     .sslSocketFactory(sslSocketFactory,x509TrustManager).hostnameVerifier(trustManager)
                     .build();
         } catch (Exception e) {

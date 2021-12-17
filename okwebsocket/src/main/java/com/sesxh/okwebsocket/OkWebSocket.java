@@ -31,17 +31,6 @@ public class OkWebSocket {
     }
 
     /**
-     * 设置一个超时时间，在指定时间内如果没有收到消息，会尝试重连
-     *
-     * @param timeout  超时时间
-     * @param timeUnit 超时时间单位
-     */
-    public static Observable<WebSocketInfo> get(String url,long timeout, TimeUnit timeUnit){
-        return sOkWebSocket.get(url,timeout,timeUnit);
-    }
-
-
-    /**
      * 发送，url的WebSocket已打开的情况下使用，否则会抛出异常
      *
      * @param msg 消息，String类型
