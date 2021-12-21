@@ -76,7 +76,7 @@ public class MainActivity extends BaseActivity {
     private final Gson gson = new Gson();
     private MachineManage machineManage;//硬件连接
     private String order_sn = "";
-    public boolean mAdvStop = false;//定时任务停止标记
+
     private List<AdvBean> mAdvList = new ArrayList<>();//本地广告列表
     private HBanner banner;//轮播
 
@@ -113,7 +113,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mAdvStop = true;
         OkWebSocket.closeAllNow();
         if (machineManage != null)
             machineManage.closeDevice();
@@ -189,9 +188,8 @@ public class MainActivity extends BaseActivity {
     * */
     @SuppressLint("CheckResult")
     private void getAdv(){
-        mAdvStop = false;
         //定时获取广告信息5分钟一次
-        Flowable.interval(1, 5, TimeUnit.MINUTES).takeWhile(aLong -> !mAdvStop).subscribe(aLong -> {
+        Flowable.interval(1, 5, TimeUnit.MINUTES).takeWhile(aLong -> isSocketConn).subscribe(aLong -> {
             Logger.i(TAG,"定时任务 拉取广告："+aLong);
             MsgBean msgBean = new MsgBean("qrcode");
             socketSend(msgBean);
