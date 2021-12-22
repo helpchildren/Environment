@@ -84,7 +84,6 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Logger.d("MainActivity", "应用启动");
         initPermission();//权限申请
         findViewById();
         initView();
@@ -131,7 +130,9 @@ public class MainActivity extends BaseActivity {
     @SuppressLint("SetTextI18n")
     private void initView() {
         GlobalSetting.deviceid = ToolsUtils.getDeviceId(activity);
-        tvVersion.setText("版本号：v" + ToolsUtils.getVersionName(activity));
+        String versionName = ToolsUtils.getVersionName(activity);
+        Logger.d("MainActivity", "应用启动 版本号："+versionName+" 设备号："+ GlobalSetting.deviceid);
+        tvVersion.setText("版本号：v" + versionName);
         tvDeviceid.setText("设备号："+ GlobalSetting.deviceid);
         tvDeviceid.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -196,6 +197,18 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    /*
+     * 定时发送心跳
+     * */
+    @SuppressLint("CheckResult")
+    private void putHeart(){
+        //定时获取广告信息5分钟一次
+        Flowable.interval(5, 20, TimeUnit.SECONDS).takeWhile(aLong -> isSocketConn).subscribe(aLong -> {
+            MsgBean msgBean = new MsgBean("heartbeat");
+            socketSend(msgBean);
+        });
+    }
+
     private void socketSend(MsgBean msgBean){
         if (isSocketConn){
             Logger.d(TAG, "客户端发送消息：" + gson.toJson(msgBean));
@@ -213,7 +226,7 @@ public class MainActivity extends BaseActivity {
                 public void onComplete() { }
             });
         }else {
-            Logger.d(TAG, "客户端发送消息失败：socket断开");
+            Logger.d(TAG, "客户端发送消息失败：socket断开 type:"+msgBean.getType());
         }
     }
 
@@ -234,6 +247,7 @@ public class MainActivity extends BaseActivity {
                         DialogUtils.getInstance().closeErrDialog();
                         deviceLogin();
                         getAdv();
+                        putHeart();
                         showText("服务器连接成功");
                         break;
                     case WebSocketStatus.STATUS_ON_CLOSED://关闭
@@ -286,14 +300,14 @@ public class MainActivity extends BaseActivity {
                 updateQRcode(msgBean.getQrcode_url());//更新二维码
                 comparisonList(msgBean.getAdv());//合并广告
                 break;
-            case MsgType.TYPE_DEBUGLOG://开启本地log
-                GlobalSetting.isDugLog = "1".equals(msgBean.getMsg());
-                break;
             case MsgType.TYPE_UPLOG://拉取本地log
                 uploadLog(msgBean.getMsg());
                 break;
             case MsgType.TYPE_OTHER://其他
                 showText("消息提示："+msgBean.getMsg());
+                break;
+            default:
+
                 break;
 
         }
