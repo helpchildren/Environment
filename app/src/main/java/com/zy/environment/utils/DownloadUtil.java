@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -39,7 +40,11 @@ public class DownloadUtil {
     }
 
     private DownloadUtil() {
-        okHttpClient = new OkHttpClient();
+        okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(20, TimeUnit.SECONDS)//设置读取超时时间
+                .writeTimeout(20, TimeUnit.SECONDS)//设置写的超时时间
+                .connectTimeout(20, TimeUnit.SECONDS)//设置连接超时时间
+                .build();
     }
 
     public static ArrayList<String> getFileName(String fileAbsolutePaht, String type) {
@@ -94,7 +99,7 @@ public class DownloadUtil {
             @Override
             public void onFailure(Call call, IOException e) {
                 // 下载失败监听回调
-                listener.onDownloadFailed(e);
+                listener.onDownloadFailed(e, destFileName);
             }
 
             @Override
@@ -125,7 +130,7 @@ public class DownloadUtil {
                     // 下载完成
                     listener.onDownloadSuccess(file, destFileName);
                 } catch (Exception e) {
-                    listener.onDownloadFailed(e);
+                    listener.onDownloadFailed(e, destFileName);
                 } finally {
                     try {
                         if (is != null)
@@ -156,7 +161,7 @@ public class DownloadUtil {
         /**
          * @param e 下载异常信息
          */
-        void onDownloadFailed(Exception e);
+        void onDownloadFailed(Exception e, String fileName);
     }
 
 

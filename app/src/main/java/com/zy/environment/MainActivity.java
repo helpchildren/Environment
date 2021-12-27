@@ -418,10 +418,14 @@ public class MainActivity extends BaseActivity {
                         }
 
                         @Override
-                        public void onDownloadFailed(Exception e) {
+                        public void onDownloadFailed(Exception e, String fileName) {
                             e.printStackTrace();
                             downCount++;
                             Logger.d(TAG, "下载失败:"+e.getMessage()+" "+downCount);
+                            AdvBean faildAdvBean = getFaildAdvBean(downAdvList, fileName);
+                            if (faildAdvBean != null) {
+                                mAdvList.remove(faildAdvBean);
+                            }
                             if (downCount == downAdvList.size()){
                                 composeList();
                             }
@@ -433,6 +437,17 @@ public class MainActivity extends BaseActivity {
                 composeList();
             }
         }
+    }
+
+    private AdvBean getFaildAdvBean(List<AdvBean> downAdvList, String fileName){
+        if (downAdvList!=null && downAdvList.size()>0){
+            for (int i = 0; i < downAdvList.size(); i++) {
+                if (fileName.equals(downAdvList.get(i).getDirName())){
+                    return downAdvList.get(i);
+                }
+            }
+        }
+        return null;
     }
 
     /*
