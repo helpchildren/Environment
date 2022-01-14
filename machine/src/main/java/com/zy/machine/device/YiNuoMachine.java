@@ -20,7 +20,7 @@ public class YiNuoMachine extends MachineManage {
     private final SellManager sellManager;//控制板管理器
 
     private int baudRate = 9600;//波特率
-    private int Timeout = 13000;//超时时间 单位毫秒
+    private int Timeout = 20000;//超时时间 单位毫秒
     private String devicesPort = "/dev/ttyS0";//串口号
     private OnDataListener listener;
 
@@ -88,7 +88,6 @@ public class YiNuoMachine extends MachineManage {
                         sellManager.sendSell(1, 1, new SellManager.OnSellState() {
                             @Override
                             public void OnRead(boolean state) {
-
                             }
                         },300);//发送出货后 300毫秒后去检测状态
                         checkState();
@@ -104,18 +103,20 @@ public class YiNuoMachine extends MachineManage {
 
 
     private void checkState(){
-        sellManager.checkState(500, Timeout, System.currentTimeMillis(),3000, new SellManager.OnCheckState() {
+        sellManager.checkState(1000, Timeout, System.currentTimeMillis(),3000, new SellManager.OnCheckState() {
             @Override
             public void OnFree() {
+                //空闲中
             }
 
             @Override
             public void OnOpening() {
+                //正在出货
             }
 
             @Override
             public void OnOvertime() {
-                listener.onError(1006,"出袋超时");
+                listener.onError(1007,"出袋超时");
                 sellManager.closeCheckState();//关闭检测任务
             }
 
@@ -133,14 +134,15 @@ public class YiNuoMachine extends MachineManage {
 
             @Override
             public void OnLose() {
+                //发现丢包
             }
 
             @Override
             public void OnEnd() {
+                //检测完成  此处日过查询超时 则也返回出袋成功
+                listener.onSuccess();
             }
         });
     }
-
-
 
 }
